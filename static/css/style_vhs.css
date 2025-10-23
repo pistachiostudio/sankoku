@@ -1,0 +1,232 @@
+/* USING THIS STYLE, THANKS! (https://codepen.io/pbitos/pen/zypwVr) */
+
+/* ===== CRT EFFECT SETTINGS (only tweak here) ===== */
+:root {
+  /* Noise (砂嵐) */
+  --noise-width: 30vw;
+  --noise-height: 30vh;
+  --noise-opacity: 0.2;     /* 0 ~ 1 */
+  --noise-z: 450;
+  --noise-speed: 2s;        /* animation-duration */
+  --noise-image: none;      /* 例: url('/img/noise.png') にしてもOK */
+
+  /* Scanlines (走査線) */
+  --scanline-opacity: 0.1;  /* .lines 全体の見え方 */
+  --scanline-speed: 0.5s;   /* 走査線のチラつき速度 */
+  --scanline-thickness: 3px;/* 線の太さ（背景の縦サイズ） */
+  --scanline-color-a: rgba(255, 255, 255, 0.387);
+  --scanline-color-b: rgba(255, 255, 255, 0.39);
+
+  /* Flicker (全体の明滅) */
+  --flicker-speed: 8s;      /* opacity のゆらぎ速度 */
+
+  /* RGB text “にじみ”（VHS風） */
+  --rgb-anim-vhs: 2s;       /* .main .vhs */
+  --rgb-anim-ui: 1s;        /* .time/.counter */
+  /* オフセット・ぼかしの基本量（px）。値を大きくするとにじみが強くなる */
+  --rgb-offset-small: 0.4px;
+  --rgb-offset-large: 0.9px;
+  --rgb-blur-small: 0.4px;
+  --rgb-blur-large: 0.7px;
+
+  /* Typewriter（1文字ずつ表示） */
+  --typewriter-duration: 1.2s;
+  --typewriter-delay-per-char: 60ms; /* var(--char-index) に掛かる */
+
+  /* レイアウト微調整（任意） */
+  --vhs-left: 0.5rem;
+  --vhs-top: 0.5rem;
+  --time-right: 2rem;
+  --time-top: 2rem;
+  --counter-left: 2rem;
+  --counter-bottom: 2rem;
+}
+/* ===== END SETTINGS ===== */
+
+
+.noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--noise-width);
+  height: var(--noise-height);
+  overflow: hidden;
+  z-index: var(--noise-z);
+  opacity: var(--noise-opacity);
+  pointer-events: none;
+}
+
+.noise:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: background-position;
+  animation: noise var(--noise-speed) infinite alternate;
+  /* 画像を使いたいときは :root の --noise-image を url(...) に */
+  background-image: var(--noise-image);
+  background-size: cover; /* 画像のとき */
+}
+
+.lines {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 300;
+  opacity: var(--scanline-opacity);
+  will-change: opacity;
+  animation: opacity var(--flicker-speed) linear infinite;
+}
+
+.lines:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    var(--scanline-color-a) 51%
+  );
+  background-size: 100% var(--scanline-thickness);
+  will-change: background, background-size;
+  animation: scanlines var(--scanline-speed) linear infinite;
+}
+
+.main .noise:before {
+  background-size: 150%;
+}
+
+.main .vhs {
+  position: relative;
+  left: var(--vhs-left);
+  top: var(--vhs-top);
+  will-change: text-shadow;
+  animation: rgbText var(--rgb-anim-vhs) steps(9) 0s infinite alternate;
+}
+
+.main .vhs .char {
+  will-change: opacity;
+  animation: type var(--typewriter-duration) infinite alternate;
+  animation-delay: calc(var(--typewriter-delay-per-char) * var(--char-index));
+}
+
+.main .time {
+  position: relative;
+  right: var(--time-right);
+  top: var(--time-top);
+  will-change: text-shadow;
+  animation: rgbText var(--rgb-anim-ui) steps(9) 0s infinite alternate;
+}
+
+.main .counter {
+  position: relative;
+  left: var(--counter-left);
+  bottom: var(--counter-bottom);
+  will-change: text-shadow;
+  animation: rgbText var(--rgb-anim-ui) steps(9) 0s infinite alternate;
+}
+
+/* --- keyframes はそのまま。下だけ “にじみ量” を変数化 --- */
+@keyframes noise {
+	0%,100% { background-position: 0 0; }
+	10% { background-position: -5% -10%; }
+	20% { background-position: -15% 5%; }
+	30% { background-position: 7% -25%; }
+	40% { background-position: 20% 25%; }
+	50% { background-position: -25% 10%; }
+	60% { background-position: 15% 5%; }
+	70% { background-position: 0 15%; }
+	80% { background-position: 25% 35%; }
+	90% { background-position: -10% 10%; }
+}
+
+@keyframes opacity {
+  0% { opacity: 0.3; }
+  20% { opacity: 0.15; }
+  35% { opacity: 0.25; }
+  50% { opacity: 0.4; }
+  60% { opacity: 0.2; }
+  80% { opacity: 0.35; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes scanlines {
+  from {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      var(--scanline-color-a) 51%
+    );
+    background-size: 100% var(--scanline-thickness);
+  }
+  to {
+    background: linear-gradient(
+      to bottom,
+      var(--scanline-color-b) 50%,
+      transparent 51%
+    );
+    background-size: 100% var(--scanline-thickness);
+  }
+}
+
+@keyframes rgbText {
+  0% {
+    text-shadow:
+      calc(-1*var(--rgb-offset-small)) var(--rgb-offset-small) var(--rgb-blur-large) rgba(255,255,255,0.6),
+      var(--rgb-offset-small) calc(-1*var(--rgb-offset-small)) var(--rgb-blur-large) rgba(255,255,235,0.7),
+      0 0 var(--rgb-blur-small) rgba(251,0,231,0.8),
+      0 0 var(--rgb-blur-large) rgba(0,233,235,0.8),
+      0 0 var(--rgb-blur-large) rgba(0,242,14,0.8),
+      0 0 var(--rgb-blur-large) rgba(244,45,0,0.8),
+      0 0 var(--rgb-blur-large) rgba(59,0,226,0.8);
+  }
+  45% {
+    text-shadow:
+      calc(-1*var(--rgb-offset-small)) var(--rgb-offset-small) var(--rgb-blur-large) rgba(255,255,255,0.6),
+      var(--rgb-offset-small) calc(-1*var(--rgb-offset-small)) var(--rgb-blur-large) rgba(255,255,235,0.7),
+      var(--rgb-offset-large) 0 var(--rgb-blur-small) rgba(251,0,231,0.8),
+      0 var(--rgb-offset-large) var(--rgb-blur-small) rgba(0,233,235,0.8),
+      calc(-1*var(--rgb-offset-large)) 0 var(--rgb-blur-small) rgba(0,242,14,0.8),
+      0 calc(-1*var(--rgb-offset-large)) var(--rgb-blur-small) rgba(244,45,0,0.8),
+      var(--rgb-offset-large) 0 var(--rgb-blur-small) rgba(59,0,226,0.8);
+  }
+  55% {
+    text-shadow:
+      calc(-1*var(--rgb-offset-small)) var(--rgb-offset-small) var(--rgb-blur-large) rgba(255,255,255,0.6),
+      var(--rgb-offset-small) calc(-1*var(--rgb-offset-small)) var(--rgb-blur-large) rgba(255,255,235,0.7),
+      0 0 var(--rgb-blur-large) rgba(251,0,231,0.8),
+      0 0 var(--rgb-blur-large) rgba(0,233,235,0.8),
+      0 0 var(--rgb-blur-large) rgba(0,242,14,0.8),
+      0 0 var(--rgb-blur-large) rgba(244,45,0,0.8),
+      0 0 var(--rgb-blur-large) rgba(59,0,226,0.8);
+  }
+  90% {
+    text-shadow:
+      calc(-1*var(--rgb-offset-small)) var(--rgb-offset-small) var(--rgb-blur-large) rgba(255,255,255,0.6),
+      var(--rgb-offset-small) calc(-1*var(--rgb-offset-small)) var(--rgb-blur-large) rgba(255,255,235,0.7),
+      calc(-1*var(--rgb-offset-large)) 0 var(--rgb-blur-small) rgba(251,0,231,0.8),
+      0 var(--rgb-offset-large) var(--rgb-blur-small) rgba(0,233,235,0.8),
+      var(--rgb-offset-large) 0 var(--rgb-blur-small) rgba(0,242,14,0.8),
+      0 calc(-1*var(--rgb-offset-large)) var(--rgb-blur-small) rgba(244,45,0,0.8),
+      var(--rgb-offset-large) 0 var(--rgb-blur-small) rgba(59,0,226,0.8);
+  }
+  100% {
+    text-shadow:
+      calc(-1*var(--rgb-offset-small)) var(--rgb-offset-small) var(--rgb-blur-large) rgba(255,255,255,0.6),
+      var(--rgb-offset-small) calc(-1*var(--rgb-offset-small)) var(--rgb-blur-large) rgba(255,255,235,0.7),
+      var(--rgb-offset-large) 0 var(--rgb-blur-small) rgba(251,0,231,0.8),
+      0 calc(-1*var(--rgb-offset-large)) var(--rgb-blur-small) rgba(0,233,235,0.8),
+      calc(-1*var(--rgb-offset-large)) 0 var(--rgb-blur-small) rgba(0,242,14,0.8),
+      0 var(--rgb-offset-large) var(--rgb-blur-small) rgba(244,45,0,0.8),
+      calc(-1*var(--rgb-offset-large)) 0 var(--rgb-blur-small) rgba(59,0,226,0.8);
+  }
+}
+
+@keyframes type {
+  0%,19% { opacity: 0; }
+  20%,100% { opacity: 1; }
+}

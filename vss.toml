@@ -1,6 +1,6 @@
-site_title = "Pistachio Studio"
-site_description = "Neighborhood recording crew Kngw, Japan."
-base_url = "https://pistachiostudio.net/"
+site_title = "糞取山酷会"
+site_description = "Hardwork Hiking Club"
+base_url = "https://pistachiostudio.github.io/sankoku/"
 
 [build]
 ignore_files = ["howtoupdate.md"]

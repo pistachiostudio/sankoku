@@ -1,16 +1,26 @@
 /*
-______ _     _             _     _       
-| ___ (_)   | |           | |   (_)      
-| |_/ /_ ___| |_ __ _  ___| |__  _  ___  
-|  __/| / __| __/ _` |/ __| '_ \| |/ _ \ 
-| |   | \__ | || (_| | (__| | | | | (_) |
-\_|   |_|___/\__\__,_|\___|_| |_|_|\___/ 
-     _____ _             _ _             
-    /  ___| |           | (_)            
-    \ `--.| |_ _   _  __| |_  ___        
-     `--. | __| | | |/ _` | |/ _ \       
-    /\__/ | |_| |_| | (_| | | (_) |      
-    \____/ \__|\__,_|\__,_|_|\___/       
+$$\   $$\ $$\   $$\  $$$$$$\   $$$$$$\ $$$$$$$$\  $$$$$$\  $$$$$$$\  $$$$$$\ 
+$$ | $$  |$$ |  $$ |$$  __$$\ $$  __$$\\__$$  __|$$  __$$\ $$  __$$\ \_$$  _|
+$$ |$$  / $$ |  $$ |$$ /  \__|$$ /  $$ |  $$ |   $$ /  $$ |$$ |  $$ |  $$ |  
+$$$$$  /  $$ |  $$ |\$$$$$$\  $$ |  $$ |  $$ |   $$ |  $$ |$$$$$$$  |  $$ |  
+$$  $$<   $$ |  $$ | \____$$\ $$ |  $$ |  $$ |   $$ |  $$ |$$  __$$<   $$ |  
+$$ |\$$\  $$ |  $$ |$$\   $$ |$$ |  $$ |  $$ |   $$ |  $$ |$$ |  $$ |  $$ |  
+$$ | \$$\ \$$$$$$  |\$$$$$$  | $$$$$$  |  $$ |    $$$$$$  |$$ |  $$ |$$$$$$\ 
+\__|  \__| \______/  \______/  \______/   \__|    \______/ \__|  \__|\______|
+                                                                             
+                                                                             
+                                                                             
+ $$$$$$\   $$$$$$\  $$\   $$\ $$\   $$\  $$$$$$\  $$\   $$\ $$\   $$\        
+$$  __$$\ $$  __$$\ $$$\  $$ |$$ | $$  |$$  __$$\ $$ | $$  |$$ |  $$ |       
+$$ /  \__|$$ /  $$ |$$$$\ $$ |$$ |$$  / $$ /  $$ |$$ |$$  / $$ |  $$ |       
+\$$$$$$\  $$$$$$$$ |$$ $$\$$ |$$$$$  /  $$ |  $$ |$$$$$  /  $$ |  $$ |       
+ \____$$\ $$  __$$ |$$ \$$$$ |$$  $$<   $$ |  $$ |$$  $$<   $$ |  $$ |       
+$$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |       
+\$$$$$$  |$$ |  $$ |$$ | \$$ |$$ | \$$\  $$$$$$  |$$ | \$$\ \$$$$$$  |       
+ \______/ \__|  \__|\__|  \__|\__|  \__| \______/ \__|  \__| \______/        
+                                                                             
+                                                                             
+                                                                             
 */
 
 /* IMPORT FONT AWESOME CSS */
@@ -20,25 +30,25 @@ ______ _     _             _     _
 YOU CAN CHANGE COLORS & WEIGHT HERE! */
 :root {
   /* MAIN BACKGROUND COLOR */
-  --main-bg-color: #0432ff;
+  --main-bg-color: #006D4D;
   /* MAIN FONT SETTINGS */
   --main-font-size: 20px;
-  --main-font-color: #dbdbdb;
+  --main-font-color: #DE6A1C;
   /* TOP TITLE COLOR */
-  --title-color: #dbdbdb;
-  --title-shadow-color: #000000;
+  --title-color: #DE6A1C;
+  --title-shadow-color: #DE6A1C;
   /* LINK COLOR SETTINGS */
-  --link-color: #ffdb25;
-  --link-hover-color: #ffffff;
+  --link-color: #e39d6e;
+  --link-hover-color: #00ff08;
   /* SOCIAL ICON SETTINGS */
   --social-font-size: 1.5rem;
-  --social-button-color: #ffdb25;
-  --social-button-hover-color: #ffffff;
+  --social-button-color: #000000;
+  --social-button-hover-color: #DE6A1C;
   /* TEXT SELECTION COLOR */
-  --selection-text-color: #000000;
-  --selection-bg-color: #37ff00;
+  --selection-text-color: #ffffff;
+  --selection-bg-color: #F24C3D;
   /* DOGGO (TOP *) COLOR */
-  --doggo-color: #ffdb25;
+  --doggo-color: #ff58d0;
 }
 
 
@@ -60,6 +70,12 @@ html {
 .h1-title {
   text-shadow: 0.2rem 0.2rem 0rem var(--title-shadow-color);
   text-decoration: underline;
+}
+
+/* DotGothic16 for spacial page contents only */
+.dotgothic16-ja {
+  font-family: 'DotGothic16', sans-serif;
+  font-size: 0.7rem;
 }
 
 /* DOGGO (Dot) SETTING */
@@ -92,7 +108,6 @@ html {
 h1 {
   font-size: 3rem;
   margin: 1.5rem 0 1rem 0;
-  text-decoration: underline;
 }
 
 h2 {
@@ -111,8 +126,8 @@ h4 {
 }
 
 h5 {
-  font-size: 0.75rem;
-  margin: 0.5rem 0 0.5rem 0;
+  font-size: 0.9rem;
+  margin: 1.7rem 0 0.7rem 0;
 }
 
 h6 {

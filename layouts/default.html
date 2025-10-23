@@ -31,9 +31,9 @@ ______ _     _             _     _
     <meta name=”description“ content="@description" />
     <!-- SNS LINK PREVIEW METADATA OGP -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Pistachio Studio" />
-    <meta property="og:description" content="Neighborhood recording crew Kngw, Japan." />
-    <meta property="og:url" content="https://pistachiostudio.net/" />
+    <meta property="og:title" content="糞取山酷会" />
+    <meta property="og:description" content="Hardwork Hiking Club." />
+    <meta property="og:url" content="https://pistachiostudio.github.io/sankoku/" />
     <meta property="og:image" content="https://pistachiostudio.net/og_image_banana_maru.png" />
     <!-- FAVICON MAY BE NEED ABSOLUTE PATH -->
     <link rel="icon" sizes="16x16" href="favicon.ico" />
@@ -42,9 +42,9 @@ ______ _     _             _     _
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="manifest" href="manifest.json" />
     <!-- CSS IMPORT -->
-    <link rel="stylesheet" href="css/mforblue_vhs.css" />
-    <link rel="stylesheet" href="css/mforblue_style.css" />
-    <link rel="stylesheet" href="css/dot/cc_cat_dot_mforblue.css" />
+    <link rel="stylesheet" href="css/style_vhs.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dot/cc_cat_dot_style.css" />
     <!-- GOOGLE FONT IMPORT FROM CDN -->
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
     <!-- VIEWPORT FOR RESPONSIVE -->
@@ -67,16 +67,22 @@ ______ _     _             _     _
 
             <!-- TOP INFORMATION -->
             <div class="doggo">*</div>
-            <span class="typew">Theme: Meditation for blue</span>
+            <span class="typew">Theme: Kabuki</span>
 
             </span>
 
-            <h1>
-                <a id="title" href="/">Pistachio Studio!</a>
+            <h1 class="brand">
+            <a id="title" href="/" aria-label="Pistachio Studio — 糞取山酷会" class="logo-link">
+                <!-- 画面には出さないがSEOと読み上げ用のテキスト -->
+                <span class="sr-only">糞取山酷会</span>
+                <span id="logo-slot" aria-hidden="true"></span>
+            </a>
             </h1>
 
-            <h2 class="typek">Neighborhood recording crew from kngw, Japan.
+            <h2 class="typek">Hardwork Hiking Club.
             </h2>
+
+
             <!-- SOCIAL ICONS USING FONT AWESOME -->
             <ul class="social">
                 <li>
@@ -115,6 +121,7 @@ ______ _     _             _     _
                     <a id="social" href="/contact"><i class="fa-regular fa-envelope fa-shake"></i></a>
                 </li>
             </ul>
+
 
             <!-- @CONTENTS -->
             {{{contents}}}
@@ -160,19 +167,27 @@ ______ _     _             _     _
                 });
             </script>
 
+            <script>
+            // /static に置いた “currentColor 化済み” のSVGを差し込む
+            fetch('sankoku-logo.svg')
+                .then(r => r.text())
+                .then(svg => { document.getElementById('logo-slot').innerHTML = svg; })
+                .catch(console.error);
+            </script>
+
             <!-- FOOTER & COPYRIGHT SCRIPT -->
             <div class="footer">
                 Acknowledgments: <a href="https://github.com/veltiosoft/vss" target="_blank">VSS</a>,
                 <a href="https://mntn-dev.github.io/t.js/" target="_blank">t.js</a>,
                 <a href="https://codepen.io/pbitos/pen/zypwVr" target="_blank">VHS Retro</a>,
                 <a href="https://fontawesome.com/" target="_blank">Font Awesome</a></br>
-                GitHub repository: <a href="https://github.com/pistachiostudio/pistachio-on-vss"
-                    target="_blank">pistachio-on-vss</a></br>
+                GitHub repository: <a href="https://github.com/pistachiostudio/sankoku"
+                    target="_blank">sankoku</a></br>
                 Hosted by: <a href="https://pages.github.com/" target="_blank">GitHub Pages</a></br>
                 <script type="text/javascript">
                     var today = new Date();
                     var y = today.getFullYear();
-                    document.write("&copy; 2005-" + y + " Pistachio Studio");
+                    document.write("&copy; 2005-" + y + " Kusotori Sankoku Kai");
                 </script>
             </div>
 
