@@ -11,11 +11,11 @@
   --noise-image: none;      /* 例: url('/img/noise.png') にしてもOK */
 
   /* Scanlines (走査線) */
-  --scanline-opacity: 0.1;  /* .lines 全体の見え方 */
-  --scanline-speed: 0.5s;   /* 走査線のチラつき速度 */
-  --scanline-thickness: 3px;/* 線の太さ（背景の縦サイズ） */
-  --scanline-color-a: rgba(255, 255, 255, 0.387);
-  --scanline-color-b: rgba(255, 255, 255, 0.39);
+  /*--scanline-opacity: 0.1;  .lines 全体の見え方 */
+  /*--scanline-speed: 0.5s;   走査線のチラつき速度 */
+  /*--scanline-thickness: 3px; 線の太さ（背景の縦サイズ） */
+  /*--scanline-color-a: rgba(255, 255, 255, 0.387); */
+  /*--scanline-color-b: rgba(255, 255, 255, 0.39); */
 
   /* Flicker (全体の明滅) */
   --flicker-speed: 8s;      /* opacity のゆらぎ速度 */
