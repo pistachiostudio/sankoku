@@ -1,4 +1,7 @@
+# Welcome to Kusotori
 
-### Content
+Welcome to our small hiking collective.
 
-- [About Us](about.html)
+Enjoy the photos, stories, and routes we’ve discovered along the way.
+
+[→ About Us](about.html)
