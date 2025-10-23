@@ -104,6 +104,12 @@ html {
   background-color: var(--selection-bg-color);
 }
 
+/* IMAGE */
+img {
+  max-width: 100%;
+}
+
+
 /* HEADING */
 h1 {
   font-size: 3rem;
