@@ -1,0 +1,6 @@
+site_title = "Pistachio Studio"
+site_description = "Neighborhood recording crew Kngw, Japan."
+base_url = "https://pistachiostudio.net/"
+
+[build]
+ignore_files = ["howtoupdate.md"]
