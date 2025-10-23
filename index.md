@@ -5,3 +5,7 @@
 - PARKGOLF
 - Shigebayashi
 - Woupa
+
+### Content
+
+- [About Us](about.html)
