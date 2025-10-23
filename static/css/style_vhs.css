@@ -24,10 +24,10 @@
   --rgb-anim-vhs: 2s;       /* .main .vhs */
   --rgb-anim-ui: 1s;        /* .time/.counter */
   /* オフセット・ぼかしの基本量（px）。値を大きくするとにじみが強くなる */
-  --rgb-offset-small: 0.4px;
-  --rgb-offset-large: 0.9px;
-  --rgb-blur-small: 0.4px;
-  --rgb-blur-large: 0.7px;
+  --rgb-offset-small: 0.2px;
+  --rgb-offset-large: 0.5px;
+  --rgb-blur-small: 0.3px;
+  --rgb-blur-large: 0.5px;
 
   /* Typewriter（1文字ずつ表示） */
   --typewriter-duration: 1.2s;
