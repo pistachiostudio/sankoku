@@ -1,5 +1,9 @@
 # Welcome to Kusotori
 
+-UNDERCONSTRUCTION-
+-UNDERCONSTRUCTION-
+-UNDERCONSTRUCTION-
+
 ![](img/R0006573.JPG)
 
 Welcome to our small hiking collective.
