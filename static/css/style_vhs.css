@@ -27,7 +27,7 @@
   --rgb-offset-small: 0.2px;
   --rgb-offset-large: 0.5px;
   --rgb-blur-small: 0.3px;
-  --rgb-blur-large: 0.5px;
+  --rgb-blur-large: 0.6px;
 
   /* Typewriter（1文字ずつ表示） */
   --typewriter-duration: 1.2s;
@@ -230,3 +230,16 @@
   0%,19% { opacity: 0; }
   20%,100% { opacity: 1; }
 }
+
+/* 既存の色・かすれの設定に追加でOK */
+#logo-slot svg{
+  /* 既存: fill: currentColor; filter: url(#inkBleed); など */
+  filter:
+    url(#inkBleed)
+    drop-shadow(-0.5px  0.5px 0 rgba(255,0,0,.8))   /* R */
+    drop-shadow( 0.5px -0.5px 0 rgba(0,255,255,.8)) /* C (= G+B) */
+    drop-shadow( 0     0      .5px rgba(255,255,255,.6)); /* 白のにじみ */
+}
+
+
+
