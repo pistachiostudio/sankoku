@@ -236,9 +236,9 @@
   /* 既存: fill: currentColor; filter: url(#inkBleed); など */
   filter:
     url(#inkBleed)
-    drop-shadow(-0.5px  0.5px 0 rgba(255,0,0,.8))   /* R */
-    drop-shadow( 0.5px -0.5px 0 rgba(0,255,255,.8)) /* C (= G+B) */
-    drop-shadow( 0     0      .5px rgba(255,255,255,.6)); /* 白のにじみ */
+    drop-shadow(-0.5px  0.5px 0 rgb(0, 0, 0))   /* R */
+    drop-shadow( 0.5px -0.5px 0 rgb(255, 255, 255)) /* C (= G+B) */
+    drop-shadow( 0     0      .5px rgb(255, 0, 0)); /* 白のにじみ */
 }
 
 
