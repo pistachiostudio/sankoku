@@ -1,6 +1,6 @@
 # Welcome to Kusotori
 
--SHIGEBAYASHI-
+-SHIGEBAYASHI-  
 -WAS-  
 -INJURED-  
 -MCL-  
