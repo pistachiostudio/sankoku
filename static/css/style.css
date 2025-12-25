@@ -34,9 +34,14 @@ YOU CAN CHANGE COLORS & WEIGHT HERE! */
   /* MAIN FONT SETTINGS */
   --main-font-size: 20px;
   --main-font-color: #DE6A1C;
-  /* TOP TITLE COLOR */
-  --title-color: #DE6A1C;
-  --title-shadow-color: #DE6A1C;
+  /* TOP TITLE LINK COLOR */
+  --title-color: #1cde33;
+  /* LOGO SVG FILL & STROKE COLOR */
+  --logo-fill-color: transparent;
+  --logo-stroke-color:  #DE6A1C;
+  --drop-shadow-r: transparent;  /* R (黒) */
+  --drop-shadow-c: transparent;  /* C (= G+B) (白) */
+  --drop-shadow-x: transparent;  /* 白のにじみ (赤) */
   /* LINK COLOR SETTINGS */
   --link-color: #e39d6e;
   --link-hover-color: #00ff08;
@@ -64,12 +69,6 @@ body {
 
 html {
   font-size: var(--main-font-size);
-}
-
-/* TITLE SHADOW */
-.h1-title {
-  text-shadow: 0.2rem 0.2rem 0rem var(--title-shadow-color);
-  text-decoration: underline;
 }
 
 /* DotGothic16 for spacial page contents only */
@@ -175,6 +174,20 @@ a:hover {
   text-decoration: none;
 }
 
+/* LOGO SVG STYLING */
+#logo-slot svg{
+  filter:
+    url(#inkBleed)
+    drop-shadow(-0.5px  0.5px 0 var(--drop-shadow-r))   /* R */
+    drop-shadow( 0.5px -0.5px 0 var(--drop-shadow-c)) /* C (= G+B) */
+    drop-shadow( 0     0      .5px var(--drop-shadow-x)); /* 白のにじみ */
+}
+
+#logo-slot svg path {
+  fill: var(--logo-fill-color) !important;
+  stroke: var(--logo-stroke-color) !important;
+}
+
 #social:any-link {
   color: var(--social-button-color);
   text-decoration: none;
@@ -228,4 +241,13 @@ a:hover {
 
 /* DESKTOP */
 @media only screen and (min-width: 767px) and (max-width: 1280px) {
+}
+
+#logo-slot svg{
+  /* 既存: fill: currentColor; filter: url(#inkBleed); など */
+  filter:
+    url(#inkBleed)
+    drop-shadow(--drop-shadow-r)   /* R */
+    drop-shadow(--drop-shadow-c) /* C (= G+B) */
+    drop-shadow(--drop-shadow-x); /* 白のにじみ */
 }

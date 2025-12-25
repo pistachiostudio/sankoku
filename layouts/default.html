@@ -168,7 +168,7 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
 
             <script>
             // /static に置いた “currentColor 化済み” のSVGを差し込む
-            fetch('sankoku-logo.svg')
+            fetch('sankoku-logo-shake.svg')
                 .then(r => r.text())
                 .then(svg => { document.getElementById('logo-slot').innerHTML = svg; })
                 .catch(console.error);

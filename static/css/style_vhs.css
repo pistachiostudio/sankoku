@@ -230,16 +230,3 @@
   0%,19% { opacity: 0; }
   20%,100% { opacity: 1; }
 }
-
-/* 既存の色・かすれの設定に追加でOK */
-#logo-slot svg{
-  /* 既存: fill: currentColor; filter: url(#inkBleed); など */
-  filter:
-    url(#inkBleed)
-    drop-shadow(-0.5px  0.5px 0 rgb(0, 0, 0))   /* R */
-    drop-shadow( 0.5px -0.5px 0 rgb(255, 255, 255)) /* C (= G+B) */
-    drop-shadow( 0     0      .5px rgb(255, 0, 0)); /* 白のにじみ */
-}
-
-
-
