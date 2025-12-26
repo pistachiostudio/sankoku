@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>糞取山登山ゲーム - Pistachio Studio</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border: 2px solid #333;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 5;
+        }
+        #altitude {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+        }
+        #start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border-radius: 4px;
+            width: 300px;
+            z-index: 10;
+            border: 1px solid #444;
+        }
+        h1 {
+            margin-top: 0;
+            letter-spacing: 0.3em;
+            font-size: 24px;
+        }
+        button {
+            background: #fff;
+            border: none;
+            padding: 12px 40px;
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #ccc;
+            transform: scale(1.05);
+        }
+        .controls-guide {
+            font-size: 11px;
+            margin-top: 25px;
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-overlay">
+        <div id="altitude">ALTITUDE: 0m</div>
+    </div>
+    
+    <div id="start-screen">
+        <h1 id="title">糞取山 登山</h1>
+        <p id="message">Pistachio Studio & Gaming<br>SANKOKU SESSION</p>
+        <button id="start-btn">CLIMB START</button>
+        <div class="controls-guide">SPACE / CLICK / TOUCH to JUMP<br>A, D / ARROWS to MOVE</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+</div>
+
+<script>
+/**
+ * 糞取山登山ゲーム (Sankoku Climbing Game)
+ */
+(function() {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
+    const altitudeEl = document.getElementById('altitude');
+    const titleEl = document.getElementById('title');
+    const messageEl = document.getElementById('message');
+
+    const W = 400;
+    const H = 600;
+    canvas.width = W;
+    canvas.height = H;
+
+    let gameState = 'START'; 
+    let player = {
+        x: W / 2,
+        y: H - 100,
+        w: 40,
+        h: 40,
+        vx: 0,
+        vy: 0,
+        jump: -13,
+        speed: 6
+    };
+
+    let platforms = [];
+    let cameraY = 0;
+    let maxAltitude = 0;
+    let gravity = 0.45;
+    let keys = {};
+
+    function initGame() {
+        player.x = W / 2 - 20;
+        player.y = H - 100;
+        player.vx = 0;
+        player.vy = 0;
+        cameraY = 0;
+        maxAltitude = 0;
+        altitudeEl.innerText = `ALTITUDE: 0m`;
+        
+        platforms = [];
+        // スタート地点
+        platforms.push({ x: 0, y: H - 50, w: W, h: 100, color: '#1a1a1a' });
+        
+        // 足場の初期生成
+        for (let i = 1; i < 20; i++) {
+            addPlatform(H - i * 100);
+        }
+    }
+
+    function addPlatform(y) {
+        const w = 70 + Math.random() * 50;
+        const x = Math.random() * (W - w);
+        platforms.push({ x, y, w, h: 12, color: '#333' });
+    }
+
+    const handleAction = () => {
+        if (gameState === 'PLAYING' && player.vy === 0) {
+            player.vy = player.jump;
+        }
+    };
+
+    window.addEventListener('keydown', e => {
+        keys[e.code] = true;
+        if (e.code === 'Space') {
+            handleAction();
+            if (gameState === 'PLAYING') e.preventDefault();
+        }
+    });
+    
+    window.addEventListener('keyup', e => keys[e.code] = false);
+    canvas.addEventListener('mousedown', handleAction);
+    
+    window.addEventListener('touchstart', (e) => {
+        if (gameState === 'PLAYING') {
+            handleAction();
+            if (e.target === canvas) e.preventDefault();
+        }
+    }, { passive: false });
+
+    startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initGame();
+        gameState = 'PLAYING';
+        startScreen.style.display = 'none';
+    });
+
+    function update() {
+        if (gameState !== 'PLAYING') return;
+
+        // 左右キー移動
+        if (keys['ArrowLeft'] || keys['KeyA']) player.vx = -player.speed;
+        else if (keys['ArrowRight'] || keys['KeyD']) player.vx = player.speed;
+        else player.vx = 0;
+
+        player.vy += gravity;
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // 画面端ループ
+        if (player.x + player.w < 0) player.x = W;
+        if (player.x > W) player.x = -player.w;
+
+        // 着地判定
+        if (player.vy > 0) {
+            platforms.forEach(p => {
+                if (player.x + 10 < p.x + p.w &&
+                    player.x + player.w - 10 > p.x &&
+                    player.y + player.h > p.y &&
+                    player.y + player.h < p.y + p.h + player.vy) {
+                    player.y = p.y - player.h;
+                    player.vy = 0;
+                }
+            });
+        }
+
+        // カメラ（スクロール）
+        if (player.y < H / 2 + cameraY) {
+            cameraY = player.y - H / 2;
+        }
+
+        // 標高計算
+        let currentAltitude = Math.floor((H - 100 - player.y) / 10);
+        if (currentAltitude > maxAltitude) {
+            maxAltitude = currentAltitude;
+            altitudeEl.innerText = `ALTITUDE: ${maxAltitude}m`;
+        }
+
+        // 足場の生成管理
+        if (platforms[platforms.length - 1].y > cameraY - 100) {
+            addPlatform(platforms[platforms.length - 1].y - 100);
+        }
+        if (platforms[0].y > cameraY + H + 200) {
+            platforms.shift();
+        }
+
+        // ゲームオーバー判定
+        if (player.y > cameraY + H + 100) {
+            gameOver();
+        }
+    }
+
+    function gameOver() {
+        gameState = 'GAMEOVER';
+        startScreen.style.display = 'block';
+        titleEl.innerText = 'MISSION FAILED';
+        messageEl.innerHTML = `RECORD: ${maxAltitude}m<br>登山失敗。再挑戦せよ。`;
+        startBtn.innerText = 'RETRY';
+    }
+
+    function draw() {
+        // 背景グラデーション
+        let bgColor = Math.max(10, 30 - maxAltitude/50);
+        ctx.fillStyle = `rgb(${bgColor}, ${bgColor}, ${bgColor})`;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        ctx.translate(0, -cameraY);
+
+        // 足場描画
+        platforms.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            if (p.y < -500) {
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(p.x, p.y, p.w, 3);
+            }
+        });
+
+        // プレイヤー（🏃）
+        ctx.font = '40px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('🏃', player.x, player.y + 35);
+
+        ctx.restore();
+
+        update();
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+})();
+</script>
+</body>
+</html>
