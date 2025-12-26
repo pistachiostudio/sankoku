@@ -1,15 +1,35 @@
-# Welcome to Kusotori
+# Welcome to Kusotori Sankoku Kai
 
 -SHIGEBAYASHI-  
 -WAS-  
 -INJURED-  
 -MCL-  
 
+He is BROKEN. Thank you. ⛷️=3
+
 ![](img/R0006573.JPG)
 
-Welcome to our small hiking collective.
+Welcome to our hiking collective.
 
-Enjoy the photos, stories, and routes we’ve discovered along the way.
+Enjoy the photos, stories, and routes we've discovered along the way.
 
-[=> About Us](about.html)  
+We're mountain lovers brought together by chance.
+
+Join us once, and you're one of us.
+
+Let's explore peaks and trails together—any season, any country, any mountain.
+
 [=> Climb](climb_game.html)
+
+---
+
+## Team
+
+- Avo
+- Koyama
+- Ono
+- PARKGOLF
+- Shigebayashi(CL)
+- Sasadesune
+- Woupa
+- 800

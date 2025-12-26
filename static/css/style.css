@@ -39,9 +39,18 @@ YOU CAN CHANGE COLORS & WEIGHT HERE! */
   /* LOGO SVG FILL & STROKE COLOR */
   --logo-fill-color: transparent;
   --logo-stroke-color:  #DE6A1C;
+  --logo-width: 100%;
   --drop-shadow-r: transparent;  /* R (黒) */
   --drop-shadow-c: transparent;  /* C (= G+B) (白) */
-  --drop-shadow-x: transparent;  /* 白のにじみ (赤) */
+  --drop-shadow-x: #FFFFFF;  /* 白のにじみ (赤) */
+  /* LOGO-2 SVG FILL & STROKE COLOR */
+  --logo-fill-color-2: #000000;
+  --logo-stroke-color-2: transparent;
+  --logo-width-2: 35%;
+  --align-left: left;
+  --drop-shadow-r-2: transparent;  /* R (黒) */
+  --drop-shadow-c-2: transparent;  /* C (= G+B) (白) */
+  --drop-shadow-x-2: transparent;  /* 白のにじみ (赤) */
   /* LINK COLOR SETTINGS */
   --link-color: #e39d6e;
   --link-hover-color: #00ff08;
@@ -54,6 +63,8 @@ YOU CAN CHANGE COLORS & WEIGHT HERE! */
   --selection-bg-color: #F24C3D;
   /* DOGGO (TOP *) COLOR */
   --doggo-color: #ff58d0;
+  /* HR LINE COLOR */
+  --hr-line-color: #00583f;
 }
 
 
@@ -80,7 +91,7 @@ html {
 /* DOGGO (Dot) SETTING */
 .doggo {
   animation: flash 0.3s linear infinite;
-  margin-top: 2.2rem;
+  margin: 2.2rem 0 1rem 0;
   color: var(--doggo-color);
   display: inline-block;
   _display: inline;
@@ -114,7 +125,7 @@ img {
 
 /* HEADING */
 h1 {
-  font-size: 3rem;
+  font-size: 2rem;
   margin: 1.5rem 0 1rem 0;
 }
 
@@ -141,6 +152,12 @@ h5 {
 h6 {
   font-size: 0.5rem;
   margin: 0.5rem 0 0.5rem 0;
+}
+
+hr {
+  border: none;
+  border-top: 1.5px solid var(--hr-line-color);
+  margin: 1rem 0;
 }
 
 ul {
@@ -172,20 +189,6 @@ a:hover {
 #title:any-link {
   color: var(--title-color);
   text-decoration: none;
-}
-
-/* LOGO SVG STYLING */
-#logo-slot svg{
-  filter:
-    url(#inkBleed)
-    drop-shadow(-0.5px  0.5px 0 var(--drop-shadow-r))   /* R */
-    drop-shadow( 0.5px -0.5px 0 var(--drop-shadow-c)) /* C (= G+B) */
-    drop-shadow( 0     0      .5px var(--drop-shadow-x)); /* 白のにじみ */
-}
-
-#logo-slot svg path {
-  fill: var(--logo-fill-color) !important;
-  stroke: var(--logo-stroke-color) !important;
 }
 
 #social:any-link {
@@ -245,9 +248,35 @@ a:hover {
 
 #logo-slot svg{
   /* 既存: fill: currentColor; filter: url(#inkBleed); など */
+  width: var(--logo-width);
+  height: auto;
   filter:
     url(#inkBleed)
-    drop-shadow(--drop-shadow-r)   /* R */
-    drop-shadow(--drop-shadow-c) /* C (= G+B) */
-    drop-shadow(--drop-shadow-x); /* 白のにじみ */
+    drop-shadow(1px 0 0 var(--drop-shadow-r))   /* R */
+    drop-shadow(0 1px 0 var(--drop-shadow-c)) /* C (= G+B) */
+    drop-shadow(0 0 2px var(--drop-shadow-x)); /* 白のにじみ */
+}
+
+#logo-slot svg path {
+  fill: var(--logo-fill-color) !important;
+  stroke: var(--logo-stroke-color) !important;
+}
+
+#logo-slot-2 svg{
+  /* 既存: fill: currentColor; filter: url(#inkBleed); など */
+  width: var(--logo-width-2);
+  height: auto;
+  display: block;
+  margin-left: auto;
+  margin-top: 0.5rem;
+  filter:
+    url(#inkBleed)
+    drop-shadow(1px 0 0 var(--drop-shadow-r-2))   /* R */
+    drop-shadow(0 1px 0 var(--drop-shadow-c-2)) /* C (= G+B) */
+    drop-shadow(0 0 2px var(--drop-shadow-x-2)); /* 白のにじみ */
+}
+
+#logo-slot-2 svg path {
+  fill: var(--logo-fill-color-2) !important;
+  stroke: var(--logo-stroke-color-2) !important;
 }

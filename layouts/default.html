@@ -77,49 +77,22 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
 
             <!-- TOP INFORMATION -->
             <div class="doggo">*</div>
-            <span class="typew">Theme: Kabuki</span>
+            <span class="typew">bro.............................................!</span>
 
             </span>
 
-            <h1 class="brand">
             <a id="title" href="/sankoku" aria-label="Pistachio Studio — 糞取山酷会" class="logo-link">
                 <!-- 画面には出さないがSEOと読み上げ用のテキスト -->
                 <span class="sr-only">糞取山酷会</span>
                 <span id="logo-slot" aria-hidden="true"></span>
             </a>
-            </h1>
+
+            <!-- 2nd logo -->
+            <span id="logo-slot-2" aria-hidden="true"></span>
 
             <h2 class="typek">Hardwork Hiking Club.
             </h2>
 
-
-            <!-- SOCIAL ICONS USING FONT AWESOME -->
-            <ul class="social">
-                <li>
-                    <a id="social" href="https://instagram.com/pistachiostudio" target="_blank"><i
-                            class="fa-brands fa-instagram fa-shake"></i></a>
-                </li>
-                <li>
-                    <a id="social" href="https://x.com/pstchstd" target="_blank"><i
-                            class="fa-brands fa-x-twitter fa-shake"></i></a>
-                </li>
-                <li>
-                    <a id="social" href="https://www.youtube.com/c/pistachiostudiokngw" target="_blank">
-                        <i class="fa-brands fa-youtube fa-shake"></i></a>
-                </li>
-                <li>
-                    <a id="social" href="https://www.strava.com/clubs/sankoku" target="_blank">
-                        <i class="fa-brands fa-strava fa-shake"></i></a>
-                </li>
-                <li>
-                    <a id="social" href="https://discord.gg/Kbu7q5uU" target="_blank">
-                        <i class="fa-brands fa-discord fa-shake"></i></a>
-                </li>
-                <li>
-                    <a id="social" href="https://github.com/pistachiostudio" target="_blank">
-                        <i class="fa-brands fa-github fa-shake"></i></a>
-                </li>
-            </ul>
 
 
             <!-- @CONTENTS -->
@@ -171,6 +144,12 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
             fetch('sankoku-logo-shake.svg')
                 .then(r => r.text())
                 .then(svg => { document.getElementById('logo-slot').innerHTML = svg; })
+                .catch(console.error);
+
+            // /static に置いた “currentColor 化済み” のSVGを差し込む
+            fetch('sankoku-logo.svg')
+                .then(r => r.text())
+                .then(svg => { document.getElementById('logo-slot-2').innerHTML = svg; })
                 .catch(console.error);
             </script>
 
