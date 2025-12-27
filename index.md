@@ -7,7 +7,7 @@
 
 He is BROKEN. Thank you. ⛷️=3
 
-![](img/R0006573.JPG)
+![](img/R0006536.JPG)
 
 Welcome to our hiking collective.
 
@@ -33,3 +33,5 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 - Sasadesune
 - Woupa
 - 800
+
+---

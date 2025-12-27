@@ -29,6 +29,10 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Install vss cli
         run: make setup
       - name: Build with vss

@@ -12,4 +12,33 @@ setup-win: clean
 	unzip vss_windows_amd64.zip
 
 build:
+	@echo "Generating slides list..."
+	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Building site..."
 	./vss build
+
+build-win:
+	@echo "Generating slides list..."
+	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Building site..."
+	./vss.exe build
+
+serve:
+	@echo "Generating slides list..."
+	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Starting development server..."
+	./vss serve
+
+serve-win:
+	@echo "Generating slides list..."
+	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Starting development server..."
+	./vss.exe serve
+
+resize-images:
+	@echo "Resizing images in static/slides..."
+	python3 resize-images.py
+
+resize-images-win:
+	@echo "Resizing images in static/slides..."
+	py -3 resize-images.py
