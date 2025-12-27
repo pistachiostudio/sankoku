@@ -42,7 +42,7 @@ YOU CAN CHANGE COLORS & WEIGHT HERE! */
   --logo-width: 100%;
   --drop-shadow-r: transparent;  /* R (黒) */
   --drop-shadow-c: transparent;  /* C (= G+B) (白) */
-  --drop-shadow-x: #FFFFFF;  /* 白のにじみ (赤) */
+  --drop-shadow-x: transparent;  /* 白のにじみ (赤) */
   /* LOGO-2 SVG FILL & STROKE COLOR */
   --logo-fill-color-2: #000000;
   --logo-stroke-color-2: transparent;
