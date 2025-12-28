@@ -94,5 +94,12 @@
     "original_width": 2000,
     "skipped": true,
     "mtime": 1766863062.6086066
+  },
+  "_DSF3879.jpg": {
+    "processed_at": "2025-12-28T15:25:43.008733",
+    "original_width": 7728,
+    "original_size_mb": 34.54,
+    "new_size_mb": 0.71,
+    "mtime": 1766903143.00773
   }
 }
