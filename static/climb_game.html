@@ -40,6 +40,32 @@
             font-weight: bold;
             letter-spacing: 0.1em;
         }
+        #mountain-name {
+            font-size: 14px;
+            color: #8f8;
+            margin-top: 5px;
+        }
+        #mountain-alert {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 100, 0, 0.95);
+            color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 15;
+            display: none;
+            animation: alertPop 0.3s ease-out;
+            border: 2px solid #8f8;
+        }
+        @keyframes alertPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
         #start-screen {
             position: absolute;
             top: 50%;
@@ -53,6 +79,8 @@
             width: 300px;
             z-index: 10;
             border: 1px solid #444;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         h1 {
             margin-top: 0;
@@ -74,11 +102,73 @@
             background: #ccc;
             transform: scale(1.05);
         }
+        button.secondary {
+            background: #444;
+            color: #fff;
+            padding: 8px 20px;
+            font-size: 14px;
+        }
+        button.secondary:hover {
+            background: #666;
+        }
         .controls-guide {
             font-size: 11px;
             margin-top: 25px;
             color: #666;
             line-height: 1.6;
+        }
+        #score-register {
+            display: none;
+            margin-top: 20px;
+        }
+        #score-register input {
+            padding: 10px;
+            font-size: 16px;
+            width: 150px;
+            border: none;
+            border-radius: 4px;
+            text-align: center;
+        }
+        #ranking-list {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #ranking-list h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-bottom: 1px solid #333;
+            font-size: 12px;
+        }
+        .ranking-item.top3 {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .ranking-item .rank {
+            width: 30px;
+        }
+        .ranking-item .name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ranking-item .score {
+            width: 60px;
+            text-align: right;
+        }
+        .ranking-item .mountain {
+            width: 80px;
+            text-align: right;
+            font-size: 10px;
+            color: #8f8;
         }
     </style>
 </head>
@@ -87,13 +177,30 @@
 <div id="game-container">
     <div id="ui-overlay">
         <div id="altitude">ALTITUDE: 0m</div>
+        <div id="mountain-name"></div>
     </div>
-    
+
+    <div id="mountain-alert"></div>
+
     <div id="start-screen">
         <h1 id="title">糞取山 登山</h1>
         <p id="message">Pistachio Studio & Gaming<br>SANKOKU SESSION</p>
         <button id="start-btn">CLIMB START</button>
         <div class="controls-guide">SPACE / CLICK / TOUCH to JUMP<br>A, D / ARROWS to MOVE</div>
+
+        <div id="score-register">
+            <p>ハイスコア登録</p>
+            <input type="text" id="player-name" placeholder="ニックネーム" maxlength="12">
+            <br>
+            <button id="register-btn">登録</button>
+        </div>
+
+        <div id="ranking-list">
+            <h3>RANKING TOP 100</h3>
+            <div id="ranking-content"></div>
+        </div>
+
+        <button id="ranking-btn" class="secondary" style="margin-top: 15px;">ランキング表示</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -111,13 +218,128 @@
     const altitudeEl = document.getElementById('altitude');
     const titleEl = document.getElementById('title');
     const messageEl = document.getElementById('message');
+    const mountainNameEl = document.getElementById('mountain-name');
+    const mountainAlertEl = document.getElementById('mountain-alert');
+    const scoreRegisterEl = document.getElementById('score-register');
+    const playerNameInput = document.getElementById('player-name');
+    const registerBtn = document.getElementById('register-btn');
+    const rankingBtn = document.getElementById('ranking-btn');
+    const rankingListEl = document.getElementById('ranking-list');
+    const rankingContentEl = document.getElementById('ranking-content');
+
+    // JSONbin.io 設定
+    const JSONBIN_BIN_ID = '69738d57d0ea881f407fc412';
+    const JSONBIN_API_KEY = '$2a$10$uPF7A8EER29IUHwZxwS14.HCeC2C0N2/CEvRWmXGTDffi7XQQel.e';
+
+    // 日本百名山データ（標高順）
+    const HYAKUMEIZAN = [
+        { name: '筑波山', altitude: 877 },
+        { name: '開聞岳', altitude: 924 },
+        { name: '天城山', altitude: 1406 },
+        { name: '雲取山', altitude: 2017 },
+        { name: '大台ヶ原山', altitude: 1695 },
+        { name: '大峰山', altitude: 1915 },
+        { name: '伊吹山', altitude: 1377 },
+        { name: '荒島岳', altitude: 1523 },
+        { name: '霧ヶ峰', altitude: 1925 },
+        { name: '美ヶ原', altitude: 2034 },
+        { name: '蓼科山', altitude: 2531 },
+        { name: '八ヶ岳', altitude: 2899 },
+        { name: '両神山', altitude: 1723 },
+        { name: '甲武信ヶ岳', altitude: 2475 },
+        { name: '金峰山', altitude: 2599 },
+        { name: '瑞牆山', altitude: 2230 },
+        { name: '大菩薩嶺', altitude: 2057 },
+        { name: '丹沢山', altitude: 1567 },
+        { name: '富士山', altitude: 3776 },
+        { name: '甲斐駒ヶ岳', altitude: 2967 },
+        { name: '仙丈ヶ岳', altitude: 3033 },
+        { name: '鳳凰山', altitude: 2840 },
+        { name: '北岳', altitude: 3193 },
+        { name: '間ノ岳', altitude: 3190 },
+        { name: '塩見岳', altitude: 3052 },
+        { name: '悪沢岳', altitude: 3141 },
+        { name: '赤石岳', altitude: 3121 },
+        { name: '聖岳', altitude: 3013 },
+        { name: '光岳', altitude: 2592 },
+        { name: '木曽駒ヶ岳', altitude: 2956 },
+        { name: '空木岳', altitude: 2864 },
+        { name: '恵那山', altitude: 2191 },
+        { name: '御嶽山', altitude: 3067 },
+        { name: '乗鞍岳', altitude: 3026 },
+        { name: '焼岳', altitude: 2455 },
+        { name: '穂高岳', altitude: 3190 },
+        { name: '槍ヶ岳', altitude: 3180 },
+        { name: '常念岳', altitude: 2857 },
+        { name: '笠ヶ岳', altitude: 2898 },
+        { name: '鷲羽岳', altitude: 2924 },
+        { name: '水晶岳', altitude: 2986 },
+        { name: '黒部五郎岳', altitude: 2840 },
+        { name: '薬師岳', altitude: 2926 },
+        { name: '立山', altitude: 3015 },
+        { name: '剱岳', altitude: 2999 },
+        { name: '白馬岳', altitude: 2932 },
+        { name: '五竜岳', altitude: 2814 },
+        { name: '鹿島槍ヶ岳', altitude: 2889 },
+        { name: '高妻山', altitude: 2353 },
+        { name: '妙高山', altitude: 2454 },
+        { name: '火打山', altitude: 2462 },
+        { name: '雨飾山', altitude: 1963 },
+        { name: '苗場山', altitude: 2145 },
+        { name: '巻機山', altitude: 1967 },
+        { name: '谷川岳', altitude: 1977 },
+        { name: '至仏山', altitude: 2228 },
+        { name: '燧ヶ岳', altitude: 2356 },
+        { name: '武尊山', altitude: 2158 },
+        { name: '赤城山', altitude: 1828 },
+        { name: '男体山', altitude: 2486 },
+        { name: '日光白根山', altitude: 2578 },
+        { name: '皇海山', altitude: 2144 },
+        { name: '那須岳', altitude: 1915 },
+        { name: '越後駒ヶ岳', altitude: 2003 },
+        { name: '平ヶ岳', altitude: 2141 },
+        { name: '会津駒ヶ岳', altitude: 2133 },
+        { name: '魚沼駒ヶ岳', altitude: 1778 },
+        { name: '磐梯山', altitude: 1816 },
+        { name: '安達太良山', altitude: 1700 },
+        { name: '吾妻山', altitude: 2035 },
+        { name: '飯豊山', altitude: 2128 },
+        { name: '朝日岳', altitude: 1871 },
+        { name: '蔵王山', altitude: 1841 },
+        { name: '月山', altitude: 1984 },
+        { name: '鳥海山', altitude: 2236 },
+        { name: '大朝日岳', altitude: 1871 },
+        { name: '早池峰山', altitude: 1917 },
+        { name: '岩手山', altitude: 2038 },
+        { name: '八甲田山', altitude: 1585 },
+        { name: '八幡平', altitude: 1613 },
+        { name: '岩木山', altitude: 1625 },
+        { name: '白神岳', altitude: 1235 },
+        { name: '秋田駒ヶ岳', altitude: 1637 },
+        { name: '鳥海山', altitude: 2236 },
+        { name: '月山', altitude: 1984 },
+        { name: '羊蹄山', altitude: 1898 },
+        { name: '利尻山', altitude: 1721 },
+        { name: '大雪山', altitude: 2291 },
+        { name: '十勝岳', altitude: 2077 },
+        { name: 'トムラウシ山', altitude: 2141 },
+        { name: '幌尻岳', altitude: 2052 },
+        { name: '後方羊蹄山', altitude: 1898 },
+        { name: '斜里岳', altitude: 1547 },
+        { name: '羅臼岳', altitude: 1661 },
+        { name: '阿蘇山', altitude: 1592 },
+        { name: '祖母山', altitude: 1756 },
+        { name: '久住山', altitude: 1787 },
+        { name: '霧島山', altitude: 1700 },
+        { name: '宮之浦岳', altitude: 1936 },
+    ].sort((a, b) => a.altitude - b.altitude);
 
     const W = 400;
     const H = 600;
     canvas.width = W;
     canvas.height = H;
 
-    let gameState = 'START'; 
+    let gameState = 'START';
     let player = {
         x: W / 2,
         y: H - 100,
@@ -136,6 +358,106 @@
     let keys = {};
     let audioContext;
     let bgmPlaying = false;
+    let passedMountains = new Set();
+    let currentMountain = null;
+
+    // 標高に対応する山を取得
+    function getMountainForAltitude(altitude) {
+        if (altitude < 877) {
+            return { name: 'ザコ', altitude: 0 };
+        }
+        let mountain = null;
+        for (const m of HYAKUMEIZAN) {
+            if (altitude >= m.altitude) {
+                mountain = m;
+            } else {
+                break;
+            }
+        }
+        return mountain;
+    }
+
+    // 山を超えた通知表示
+    function showMountainAlert(mountain) {
+        mountainAlertEl.innerHTML = `${mountain.name}<br>(${mountain.altitude}m) 突破!`;
+        mountainAlertEl.style.display = 'block';
+        setTimeout(() => {
+            mountainAlertEl.style.display = 'none';
+        }, 2000);
+    }
+
+    // スコア取得
+    async function fetchScores() {
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+            });
+            const data = await res.json();
+            return data.record.scores || [];
+        } catch (e) {
+            console.error('スコア取得エラー:', e);
+            return [];
+        }
+    }
+
+    // スコア保存
+    async function saveScore(name, score) {
+        try {
+            const scores = await fetchScores();
+            const mountain = getMountainForAltitude(score);
+            scores.push({
+                name,
+                score,
+                mountain: mountain ? mountain.name : '-',
+                date: new Date().toISOString()
+            });
+            scores.sort((a, b) => b.score - a.score);
+            const top100 = scores.slice(0, 100);
+
+            await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_API_KEY
+                },
+                body: JSON.stringify({ scores: top100 })
+            });
+            return true;
+        } catch (e) {
+            console.error('スコア保存エラー:', e);
+            return false;
+        }
+    }
+
+    // ランキング表示
+    async function showRanking() {
+        rankingContentEl.innerHTML = '読み込み中...';
+        rankingListEl.style.display = 'block';
+
+        const scores = await fetchScores();
+        if (scores.length === 0) {
+            rankingContentEl.innerHTML = '<p style="text-align:center;">まだ記録がありません</p>';
+            return;
+        }
+
+        let html = '';
+        scores.forEach((s, i) => {
+            const topClass = i < 3 ? 'top3' : '';
+            html += `<div class="ranking-item ${topClass}">
+                <span class="rank">${i + 1}.</span>
+                <span class="name">${escapeHtml(s.name)}</span>
+                <span class="score">${s.score}m</span>
+                <span class="mountain">${s.mountain || '-'}</span>
+            </div>`;
+        });
+        rankingContentEl.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     function initGame() {
         player.x = W / 2 - 20;
@@ -144,13 +466,14 @@
         player.vy = 0;
         cameraY = 0;
         maxAltitude = 0;
+        passedMountains = new Set();
+        currentMountain = null;
         altitudeEl.innerText = `ALTITUDE: 0m`;
-        
+        mountainNameEl.innerText = '';
+
         platforms = [];
-        // スタート地点
         platforms.push({ x: 0, y: H - 50, w: W, h: 100, color: '#1a1a1a' });
-        
-        // 足場の初期生成
+
         for (let i = 1; i < 20; i++) {
             addPlatform(H - i * 100);
         }
@@ -206,21 +529,41 @@
 
     function playJumpSound() {
         if (!audioContext) return;
-        
+
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
-        
+
         osc.connect(gain);
         gain.connect(audioContext.destination);
-        
+
         osc.frequency.value = 400;
         osc.type = 'sine';
-        
+
         gain.gain.setValueAtTime(0.1, audioContext.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        
+
         osc.start(audioContext.currentTime);
         osc.stop(audioContext.currentTime + 0.1);
+    }
+
+    function playMountainSound() {
+        if (!audioContext) return;
+
+        const notes = [523, 659, 784];
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start(audioContext.currentTime);
+                osc.stop(audioContext.currentTime + 0.3);
+            }, i * 100);
+        });
     }
 
     const handleAction = () => {
@@ -237,10 +580,10 @@
             if (gameState === 'PLAYING') e.preventDefault();
         }
     });
-    
+
     window.addEventListener('keyup', e => keys[e.code] = false);
     canvas.addEventListener('mousedown', handleAction);
-    
+
     window.addEventListener('touchstart', (e) => {
         if (gameState === 'PLAYING') {
             handleAction();
@@ -254,13 +597,43 @@
         initGame();
         gameState = 'PLAYING';
         startScreen.style.display = 'none';
+        scoreRegisterEl.style.display = 'none';
+        rankingListEl.style.display = 'none';
         playBGM();
+    });
+
+    registerBtn.addEventListener('click', async () => {
+        const name = playerNameInput.value.trim();
+        if (!name) {
+            alert('ニックネームを入力してください');
+            return;
+        }
+        registerBtn.disabled = true;
+        registerBtn.innerText = '登録中...';
+
+        const success = await saveScore(name, maxAltitude);
+        if (success) {
+            scoreRegisterEl.style.display = 'none';
+            alert('登録完了!');
+            showRanking();
+        } else {
+            alert('登録に失敗しました');
+        }
+        registerBtn.disabled = false;
+        registerBtn.innerText = '登録';
+    });
+
+    rankingBtn.addEventListener('click', () => {
+        if (rankingListEl.style.display === 'block') {
+            rankingListEl.style.display = 'none';
+        } else {
+            showRanking();
+        }
     });
 
     function update() {
         if (gameState !== 'PLAYING') return;
 
-        // 左右キー移動
         if (keys['ArrowLeft'] || keys['KeyA']) player.vx = -player.speed;
         else if (keys['ArrowRight'] || keys['KeyD']) player.vx = player.speed;
         else player.vx = 0;
@@ -269,11 +642,9 @@
         player.x += player.vx;
         player.y += player.vy;
 
-        // 画面端ループ
         if (player.x + player.w < 0) player.x = W;
         if (player.x > W) player.x = -player.w;
 
-        // 着地判定
         if (player.vy > 0) {
             platforms.forEach(p => {
                 if (player.x + 10 < p.x + p.w &&
@@ -286,19 +657,26 @@
             });
         }
 
-        // カメラ（スクロール）
         if (player.y < H / 2 + cameraY) {
             cameraY = player.y - H / 2;
         }
 
-        // 標高計算
         let currentAltitude = Math.floor((H - 100 - player.y) / 10);
         if (currentAltitude > maxAltitude) {
             maxAltitude = currentAltitude;
             altitudeEl.innerText = `ALTITUDE: ${maxAltitude}m`;
+
+            // 山チェック（ザコは通知しない）
+            const mountain = getMountainForAltitude(maxAltitude);
+            if (mountain && mountain.name !== 'ザコ' && !passedMountains.has(mountain.name)) {
+                passedMountains.add(mountain.name);
+                currentMountain = mountain;
+                mountainNameEl.innerText = `${mountain.name} (${mountain.altitude}m)`;
+                showMountainAlert(mountain);
+                playMountainSound();
+            }
         }
 
-        // 足場の生成管理
         if (platforms[platforms.length - 1].y > cameraY - 100) {
             addPlatform(platforms[platforms.length - 1].y - 100);
         }
@@ -306,7 +684,6 @@
             platforms.shift();
         }
 
-        // ゲームオーバー判定
         if (player.y > cameraY + H + 100) {
             gameOver();
         }
@@ -316,12 +693,24 @@
         gameState = 'GAMEOVER';
         startScreen.style.display = 'block';
         titleEl.innerText = 'MISSION FAILED';
-        messageEl.innerHTML = `RECORD: ${maxAltitude}m<br>登山失敗。再挑戦せよ。`;
+
+        const mountainText = currentMountain
+            ? `到達: ${currentMountain.name} (${currentMountain.altitude}m)`
+            : '';
+        messageEl.innerHTML = `RECORD: ${maxAltitude}m<br>${mountainText}<br>登山失敗。再挑戦せよ。`;
         startBtn.innerText = 'RETRY';
+
+        // スコア登録フォーム表示
+        scoreRegisterEl.style.display = 'block';
+        playerNameInput.value = localStorage.getItem('sankoku_name') || '';
     }
 
+    // 名前を記憶
+    playerNameInput.addEventListener('change', () => {
+        localStorage.setItem('sankoku_name', playerNameInput.value);
+    });
+
     function draw() {
-        // 背景グラデーション
         let bgColor = Math.max(10, 30 - maxAltitude/50);
         ctx.fillStyle = `rgb(${bgColor}, ${bgColor}, ${bgColor})`;
         ctx.fillRect(0, 0, W, H);
@@ -329,7 +718,6 @@
         ctx.save();
         ctx.translate(0, -cameraY);
 
-        // 足場描画
         platforms.forEach(p => {
             ctx.fillStyle = p.color;
             ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -339,7 +727,6 @@
             }
         });
 
-        // プレイヤー（🏃）
         ctx.font = '40px Arial';
         ctx.textAlign = 'left';
         ctx.fillText('🏃', player.x, player.y + 35);
