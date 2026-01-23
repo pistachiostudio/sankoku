@@ -170,6 +170,68 @@
             font-size: 10px;
             color: #8f8;
         }
+        /* バーチャルコントローラー（スマホ用） */
+        #virtual-controller {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 150px;
+            pointer-events: none;
+            z-index: 20;
+        }
+        #virtual-controller.active {
+            display: block;
+        }
+        .joystick-area {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            width: 120px;
+            height: 120px;
+            pointer-events: auto;
+        }
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            position: relative;
+        }
+        .joystick-stick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s;
+        }
+        .jump-button {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 100, 100, 0.5);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .jump-button:active {
+            background: rgba(255, 150, 150, 0.7);
+        }
     </style>
 </head>
 <body>
@@ -204,6 +266,16 @@
     </div>
 
     <canvas id="gameCanvas"></canvas>
+
+    <!-- バーチャルコントローラー（スマホ用） -->
+    <div id="virtual-controller">
+        <div class="joystick-area" id="joystick-area">
+            <div class="joystick-base">
+                <div class="joystick-stick" id="joystick-stick"></div>
+            </div>
+        </div>
+        <div class="jump-button" id="jump-button">JUMP</div>
+    </div>
 </div>
 
 <script>
@@ -226,6 +298,15 @@
     const rankingBtn = document.getElementById('ranking-btn');
     const rankingListEl = document.getElementById('ranking-list');
     const rankingContentEl = document.getElementById('ranking-content');
+    const virtualController = document.getElementById('virtual-controller');
+    const joystickArea = document.getElementById('joystick-area');
+    const joystickStick = document.getElementById('joystick-stick');
+    const jumpButton = document.getElementById('jump-button');
+
+    // スマホ判定（画面幅768px以下またはタッチデバイス）
+    function isMobile() {
+        return window.innerWidth <= 768 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    }
 
     // JSONbin.io 設定
     const JSONBIN_BIN_ID = '69738d57d0ea881f407fc412';
@@ -360,6 +441,11 @@
     let bgmPlaying = false;
     let passedMountains = new Set();
     let currentMountain = null;
+
+    // バーチャルコントローラー用
+    let joystickActive = false;
+    let joystickTouchId = null;
+    let virtualMoveDirection = 0; // -1: 左, 0: 停止, 1: 右
 
     // 標高に対応する山を取得
     function getMountainForAltitude(altitude) {
@@ -584,12 +670,94 @@
     window.addEventListener('keyup', e => keys[e.code] = false);
     canvas.addEventListener('mousedown', handleAction);
 
+    // PC用: canvas直接タッチでジャンプ（スマホではバーチャルコントローラーを使用）
     window.addEventListener('touchstart', (e) => {
-        if (gameState === 'PLAYING') {
+        if (gameState === 'PLAYING' && !isMobile()) {
             handleAction();
             if (e.target === canvas) e.preventDefault();
         }
     }, { passive: false });
+
+    // バーチャルジョイスティック処理
+    function setupVirtualController() {
+        if (!isMobile()) return;
+
+        const joystickBase = joystickArea.querySelector('.joystick-base');
+        const baseRect = () => joystickBase.getBoundingClientRect();
+
+        // ジョイスティックのタッチ開始
+        joystickArea.addEventListener('touchstart', (e) => {
+            if (gameState !== 'PLAYING') return;
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            joystickTouchId = touch.identifier;
+            joystickActive = true;
+            updateJoystick(touch.clientX, touch.clientY, baseRect());
+        }, { passive: false });
+
+        // ジョイスティックの移動
+        joystickArea.addEventListener('touchmove', (e) => {
+            if (!joystickActive || gameState !== 'PLAYING') return;
+            e.preventDefault();
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === joystickTouchId) {
+                    updateJoystick(touch.clientX, touch.clientY, baseRect());
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        // ジョイスティックのタッチ終了
+        const endJoystick = (e) => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === joystickTouchId) {
+                    joystickActive = false;
+                    joystickTouchId = null;
+                    virtualMoveDirection = 0;
+                    joystickStick.style.transform = 'translate(-50%, -50%)';
+                    break;
+                }
+            }
+        };
+        joystickArea.addEventListener('touchend', endJoystick, { passive: false });
+        joystickArea.addEventListener('touchcancel', endJoystick, { passive: false });
+
+        // ジョイスティック位置更新
+        function updateJoystick(touchX, touchY, rect) {
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const maxDistance = rect.width / 2 - 25;
+
+            let deltaX = touchX - centerX;
+            let deltaY = touchY - centerY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (distance > maxDistance) {
+                deltaX = (deltaX / distance) * maxDistance;
+                deltaY = (deltaY / distance) * maxDistance;
+            }
+
+            joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
+
+            // 左右の移動判定（X軸のみ使用）
+            const threshold = maxDistance * 0.3;
+            if (deltaX < -threshold) {
+                virtualMoveDirection = -1;
+            } else if (deltaX > threshold) {
+                virtualMoveDirection = 1;
+            } else {
+                virtualMoveDirection = 0;
+            }
+        }
+
+        // ジャンプボタン
+        jumpButton.addEventListener('touchstart', (e) => {
+            if (gameState === 'PLAYING') {
+                e.preventDefault();
+                handleAction();
+            }
+        }, { passive: false });
+    }
 
     startBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -599,6 +767,10 @@
         startScreen.style.display = 'none';
         scoreRegisterEl.style.display = 'none';
         rankingListEl.style.display = 'none';
+        // スマホの場合はバーチャルコントローラーを表示
+        if (isMobile()) {
+            virtualController.classList.add('active');
+        }
         playBGM();
     });
 
@@ -634,8 +806,10 @@
     function update() {
         if (gameState !== 'PLAYING') return;
 
+        // キーボード入力またはバーチャルコントローラー入力
         if (keys['ArrowLeft'] || keys['KeyA']) player.vx = -player.speed;
         else if (keys['ArrowRight'] || keys['KeyD']) player.vx = player.speed;
+        else if (virtualMoveDirection !== 0) player.vx = virtualMoveDirection * player.speed;
         else player.vx = 0;
 
         player.vy += gravity;
@@ -692,6 +866,8 @@
     function gameOver() {
         gameState = 'GAMEOVER';
         startScreen.style.display = 'block';
+        virtualController.classList.remove('active');
+        virtualMoveDirection = 0;
         titleEl.innerText = 'MISSION FAILED';
 
         const mountainText = currentMountain
@@ -736,6 +912,9 @@
         update();
         requestAnimationFrame(draw);
     }
+
+    // バーチャルコントローラーのセットアップ
+    setupVirtualController();
 
     draw();
 })();
