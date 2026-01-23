@@ -52,6 +52,43 @@
             margin-top: 5px;
         }
 
+        #next-mountain {
+            font-size: 13px;
+            color: #9cf;
+            margin-top: 4px;
+        }
+
+        .ingame-audio {
+            position: fixed; /* プレイ領域の外に独立配置 */
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 8px 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #ddd;
+            pointer-events: auto;
+            z-index: 50;
+            display: none; /* 初期画面では非表示 */
+        }
+
+        .ingame-audio label {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .ingame-audio input[type="range"] {
+            width: 140px;
+        }
+
+        .ingame-audio button {
+            width: 100%;
+            padding: 6px 0;
+            margin-top: 6px;
+            font-size: 11px;
+        }
+
         #mountain-alert {
             position: absolute;
             top: 50%;
@@ -203,6 +240,30 @@
             color: #8f8;
         }
 
+        .audio-controls {
+            margin-top: 16px;
+            color: #ccc;
+            font-size: 12px;
+            text-align: left;
+            border-top: 1px solid #333;
+            padding-top: 12px;
+        }
+
+        .audio-controls label {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .audio-controls input[type="range"] {
+            width: 100%;
+        }
+
+        #bgm-toggle {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px 0;
+        }
+
         /* バーチャルコントローラー（スマホ用） */
         #virtual-controller {
             display: none;
@@ -280,6 +341,13 @@
         <div id="ui-overlay">
             <div id="altitude">ALTITUDE: 0m</div>
             <div id="mountain-name"></div>
+            <div id="next-mountain"></div>
+        </div>
+
+        <div class="ingame-audio">
+            <label for="bgm-volume-play">BGM 音量</label>
+            <input id="bgm-volume-play" type="range" min="0" max="100" value="50">
+            <button id="bgm-toggle-play" class="secondary">BGM: ON</button>
         </div>
 
         <div id="mountain-alert"></div>
@@ -303,6 +371,12 @@
             </div>
 
             <button id="ranking-btn" class="secondary" style="margin-top: 15px;">ランキング表示</button>
+
+            <div class="audio-controls">
+                <label for="bgm-volume">BGM 音量</label>
+                <input id="bgm-volume" type="range" min="0" max="100" value="50">
+                <button id="bgm-toggle" class="secondary">BGM: ON</button>
+            </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
@@ -331,6 +405,7 @@
             const titleEl = document.getElementById('title');
             const messageEl = document.getElementById('message');
             const mountainNameEl = document.getElementById('mountain-name');
+            const nextMountainEl = document.getElementById('next-mountain');
             const mountainAlertEl = document.getElementById('mountain-alert');
             const scoreRegisterEl = document.getElementById('score-register');
             const playerNameInput = document.getElementById('player-name');
@@ -342,6 +417,11 @@
             const joystickArea = document.getElementById('joystick-area');
             const joystickStick = document.getElementById('joystick-stick');
             const jumpButton = document.getElementById('jump-button');
+            const bgmVolumeSlider = document.getElementById('bgm-volume');
+            const bgmToggleBtn = document.getElementById('bgm-toggle');
+            const bgmVolumePlaySlider = document.getElementById('bgm-volume-play');
+            const bgmTogglePlayBtn = document.getElementById('bgm-toggle-play');
+            const ingameAudioPanel = document.querySelector('.ingame-audio');
 
             // スマホ判定（画面幅768px以下またはタッチデバイス）
             function isMobile() {
@@ -482,6 +562,8 @@
             let bgmPlaying = false;
             let passedMountains = new Set();
             let currentMountain = null;
+            let bgmEnabled = true;
+            let bgmVolume = 0.05; // default volume
 
             // バーチャルコントローラー用
             let joystickActive = false;
@@ -502,6 +584,23 @@
                     }
                 }
                 return mountain;
+            }
+
+            // 次に目指す百名山を取得
+            function getNextMountain(altitude) {
+                for (const m of HYAKUMEIZAN) {
+                    if (altitude < m.altitude) return m;
+                }
+                return null;
+            }
+
+            function updateNextMountainDisplay(altitude) {
+                const next = getNextMountain(altitude);
+                if (next) {
+                    nextMountainEl.innerText = `次の百名山: ${next.name} (${next.altitude}m)`;
+                } else {
+                    nextMountainEl.innerText = '百名山コンプリート！';
+                }
             }
 
             // 山を超えた通知表示
@@ -589,6 +688,7 @@
                 currentMountain = null;
                 altitudeEl.innerText = `ALTITUDE: 0m`;
                 mountainNameEl.innerText = '';
+                updateNextMountainDisplay(0);
 
                 platforms = [];
                 platforms.push({ x: 0, y: H - 50, w: W, h: 100, color: '#1a1a1a' });
@@ -611,7 +711,7 @@
             }
 
             function playBGM() {
-                if (bgmPlaying || !audioContext) return;
+                if (!bgmEnabled || bgmPlaying || !audioContext) return;
                 bgmPlaying = true;
 
                 const notes = [ 262, 294, 330, 349, 392, 440, 494, 523 ];
@@ -619,7 +719,7 @@
                 let noteIndex = 0;
 
                 function playNote() {
-                    if (gameState !== 'PLAYING') {
+                    if (gameState !== 'PLAYING' || !bgmEnabled) {
                         bgmPlaying = false;
                         return;
                     }
@@ -633,8 +733,8 @@
                     osc.frequency.value = notes[ pattern[ noteIndex % pattern.length ] ];
                     osc.type = 'square';
 
-                    gain.gain.setValueAtTime(0.05, audioContext.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    gain.gain.setValueAtTime(bgmVolume, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, bgmVolume * 0.2), audioContext.currentTime + 0.3);
 
                     osc.start(audioContext.currentTime);
                     osc.stop(audioContext.currentTime + 0.3);
@@ -684,6 +784,24 @@
                     }, i * 100);
                 });
             }
+
+            // BGM UI
+            function setBgmVolume(val) {
+                const clamped = Math.max(0, Math.min(100, Number(val) || 0));
+                bgmVolume = (clamped / 100) * 0.1; // map 0-100 to 0 - 0.1
+                if (bgmVolumeSlider) bgmVolumeSlider.value = clamped;
+                if (bgmVolumePlaySlider) bgmVolumePlaySlider.value = clamped;
+            }
+
+            function updateBgmToggleLabel() {
+                const label = bgmEnabled ? 'BGM: ON' : 'BGM: OFF';
+                if (bgmToggleBtn) bgmToggleBtn.innerText = label;
+                if (bgmTogglePlayBtn) bgmTogglePlayBtn.innerText = label;
+            }
+
+            // 初期表示をUIに反映
+            setBgmVolume(bgmVolumeSlider ? bgmVolumeSlider.value : 50);
+            updateBgmToggleLabel();
 
             const handleAction = () => {
                 if (gameState === 'PLAYING' && player.vy === 0) {
@@ -800,11 +918,46 @@
                 startScreen.style.display = 'none';
                 scoreRegisterEl.style.display = 'none';
                 rankingListEl.style.display = 'none';
+                if (ingameAudioPanel) ingameAudioPanel.style.display = 'block';
                 // スマホの場合はバーチャルコントローラーを表示
                 if (isMobile()) {
                     virtualController.classList.add('active');
                 }
                 playBGM();
+            });
+
+            // BGM 音量スライダー
+            bgmVolumeSlider.addEventListener('input', () => {
+                setBgmVolume(bgmVolumeSlider.value);
+            });
+
+            // BGM ON/OFF トグル
+            bgmToggleBtn.addEventListener('click', () => {
+                bgmEnabled = !bgmEnabled;
+                updateBgmToggleLabel();
+                if (bgmEnabled) {
+                    initAudio();
+                    playBGM();
+                } else {
+                    bgmPlaying = false;
+                }
+            });
+
+            // プレイ中 UI の音量スライダー
+            bgmVolumePlaySlider.addEventListener('input', () => {
+                setBgmVolume(bgmVolumePlaySlider.value);
+            });
+
+            // プレイ中 UI の ON/OFF
+            bgmTogglePlayBtn.addEventListener('click', () => {
+                bgmEnabled = !bgmEnabled;
+                updateBgmToggleLabel();
+                if (bgmEnabled) {
+                    initAudio();
+                    playBGM();
+                } else {
+                    bgmPlaying = false;
+                }
             });
 
             registerBtn.addEventListener('click', async () => {
@@ -882,6 +1035,8 @@
                         showMountainAlert(mountain);
                         playMountainSound();
                     }
+
+                    updateNextMountainDisplay(maxAltitude);
                 }
 
                 if (platforms[ platforms.length - 1 ].y > cameraY - 100) {
@@ -908,6 +1063,7 @@
                     : '';
                 messageEl.innerHTML = `RECORD: ${maxAltitude}m<br>${mountainText}<br>登山失敗。再挑戦せよ。`;
                 startBtn.innerText = 'RETRY';
+                if (ingameAudioPanel) ingameAudioPanel.style.display = 'none';
 
                 // スコア登録フォーム表示
                 scoreRegisterEl.style.display = 'block';
