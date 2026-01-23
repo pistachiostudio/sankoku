@@ -348,9 +348,8 @@
                 return window.innerWidth <= 768 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             }
 
-            // JSONbin.io 設定
-            const JSONBIN_BIN_ID = '69738d57d0ea881f407fc412';
-            const JSONBIN_API_KEY = '$2a$10$uPF7A8EER29IUHwZxwS14.HCeC2C0N2/CEvRWmXGTDffi7XQQel.e';
+            // Google Sheets API 設定
+            const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbwaaWhBd92k7dxiEgTFylYqEBaUPiNt2sZybbncy7kgZewTmASasXtq48aoBVLa9zqQvA/exec';
 
             // 日本百名山データ（標高順・重複なし / YAMAP基準）
             const HYAKUMEIZAN = [
@@ -517,11 +516,9 @@
             // スコア取得
             async function fetchScores() {
                 try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                        headers: { 'X-Master-Key': JSONBIN_API_KEY }
-                    });
+                    const res = await fetch(SHEETS_API_URL);
                     const data = await res.json();
-                    return data.record.scores || [];
+                    return data || [];
                 } catch (e) {
                     console.error('スコア取得エラー:', e);
                     return [];
@@ -531,24 +528,18 @@
             // スコア保存
             async function saveScore(name, score) {
                 try {
-                    const scores = await fetchScores();
                     const mountain = getMountainForAltitude(score);
-                    scores.push({
-                        name,
-                        score,
-                        mountain: mountain ? mountain.name : '-',
-                        date: new Date().toISOString()
-                    });
-                    scores.sort((a, b) => b.score - a.score);
-                    const top100 = scores.slice(0, 100);
-
-                    await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-                        method: 'PUT',
+                    await fetch(SHEETS_API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Master-Key': JSONBIN_API_KEY
                         },
-                        body: JSON.stringify({ scores: top100 })
+                        body: JSON.stringify({
+                            name,
+                            score,
+                            mountain: mountain ? mountain.name : '-'
+                        })
                     });
                     return true;
                 } catch (e) {
@@ -559,7 +550,7 @@
 
             // ランキング表示
             async function showRanking() {
-                rankingContentEl.innerHTML = '読み込み中...';
+                rankingContentEl.innerHTML = '読み込み中...ちょっと時間かかるよ🍵';
                 rankingListEl.style.display = 'block';
 
                 const scores = await fetchScores();
