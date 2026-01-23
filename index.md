@@ -26,11 +26,12 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 ## Team
 
 - Avo
+- Kawai
 - Koyama
 - Ono
 - PARKGOLF
-- Shigebayashi(CL)
 - Sasadesune
+- Shigebayashi(CL)
 - Woupa
 - 800
 
