@@ -21,8 +21,8 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 ## Team
 
 - Avo
-- Kawai
 - Kanata Tanaka
+- Kawai
 - Koyama
 - momo
 - Ono
