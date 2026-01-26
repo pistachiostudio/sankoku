@@ -14,24 +14,32 @@ setup-win: clean
 build:
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Generating logs..."
+	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
 	@echo "Building site..."
 	./vss build
 
 build-win:
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Generating logs..."
+	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
 	@echo "Building site..."
 	./vss.exe build
 
 serve:
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Generating logs..."
+	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
 	@echo "Starting development server..."
 	./vss serve
 
 serve-win:
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
+	@echo "Generating logs..."
+	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
 	@echo "Starting development server..."
 	./vss.exe serve
 

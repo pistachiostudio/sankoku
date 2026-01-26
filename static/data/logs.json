@@ -1,0 +1,81 @@
+{
+  "logs": [
+    {
+      "id": "20251103_yushin",
+      "mountain": "ユーシンロッジ",
+      "date": "2025-11-03",
+      "area": "丹沢",
+      "members": [
+        "Avo",
+        "Kawai",
+        "Koyama"
+      ],
+      "note": "ユーシンロッジピストン",
+      "photos": [],
+      "altitude": 754,
+      "location": {
+        "lat": 35.45194675469277,
+        "lng": 139.12148770589727
+      },
+      "gpx": "20251103_yushin/track.gpx"
+    },
+    {
+      "id": "20250711_oasahidake",
+      "mountain": "大朝日岳",
+      "date": "2025-07-11",
+      "area": "東北/山形",
+      "members": [
+        "Avo",
+        "Koyama",
+        "Shigebayashi",
+        "Woupa"
+      ],
+      "note": "東北の山は最高",
+      "photos": [],
+      "altitude": 1840,
+      "location": {
+        "lat": 38.26084881409512,
+        "lng": 139.9220020808859
+      },
+      "gpx": "20250711_oasahidake/track.gpx"
+    },
+    {
+      "id": "20250627_kumotoriyama",
+      "mountain": "雲取山",
+      "date": "2025-06-27",
+      "area": "奥多摩",
+      "members": [
+        "Koyama",
+        "PARKGOLF",
+        "Shigebayashi",
+        "Wopupa",
+        "800"
+      ],
+      "note": "足腰トレーニング合宿",
+      "photos": [],
+      "altitude": 2018,
+      "location": {
+        "lat": 35.85545073712051,
+        "lng": 138.94393461405636
+      },
+      "gpx": "20250627_kumotoriyama/track.gpx"
+    },
+    {
+      "id": "20250620_yamanote",
+      "mountain": "山手線一周",
+      "date": "2025-06-20",
+      "area": "東京",
+      "members": [
+        "Koyama"
+      ],
+      "note": "深夜、山手線一周歩き。",
+      "photos": [],
+      "altitude": 76,
+      "location": {
+        "lat": 35.6874351,
+        "lng": 139.7019479
+      },
+      "gpx": "20250620_yamanote/track.gpx"
+    }
+  ]
+}

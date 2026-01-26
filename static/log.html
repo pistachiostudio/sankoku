@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>山行ログ | 糞取山酷会</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --main-bg-color: #006D4D;
+            --main-font-color: #DE6A1C;
+            --title-color: #1cde33;
+            --link-color: #e39d6e;
+            --link-hover-color: #00ff08;
+            --hr-line-color: #00583f;
+            --selection-bg-color: #F24C3D;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--main-bg-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            margin: 0;
+            padding: 1rem;
+            font-size: 18px;
+            min-height: 100vh;
+        }
+
+        ::selection {
+            color: #ffffff;
+            background-color: var(--selection-bg-color);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .header h1 {
+            color: var(--title-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .back-link {
+            color: var(--link-color);
+            text-decoration: none;
+            border: 2px solid var(--link-color);
+            padding: 0.3rem 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 2px solid var(--hr-line-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            font-size: 1rem;
+            padding: 0.3rem 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover {
+            border-color: var(--link-hover-color);
+            color: var(--link-hover-color);
+        }
+
+        .toggle-btn.active {
+            background: var(--hr-line-color);
+            color: var(--title-color);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border: 1px dashed var(--hr-line-color);
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.3rem;
+        }
+
+        .stat-label {
+            color: var(--link-color);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: var(--title-color);
+            font-size: 1.3rem;
+        }
+
+        /* Filter */
+        .filter-section {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border: 1px dashed var(--hr-line-color);
+        }
+
+        .filter-label {
+            color: var(--link-color);
+            margin-right: 0.5rem;
+        }
+
+        .filter-select {
+            background: var(--main-bg-color);
+            color: var(--main-font-color);
+            border: 2px solid var(--hr-line-color);
+            font-family: "VT323", monospace;
+            font-size: 1rem;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--link-hover-color);
+        }
+
+        /* Map Container */
+        #map {
+            width: 100%;
+            height: 450px;
+            border: 3px solid var(--hr-line-color);
+            position: relative;
+        }
+
+        #map::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* List View */
+        .list-view {
+            display: block;
+        }
+
+        .list-view.hidden {
+            display: none;
+        }
+
+        .map-view {
+            display: none;
+        }
+
+        .map-view.active {
+            display: block;
+        }
+
+        /* Climb List */
+        .climb-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .climb-item {
+            border: 2px solid var(--hr-line-color);
+            margin-bottom: 0.8rem;
+            overflow: hidden;
+        }
+
+        .climb-item.expanded {
+            border-color: var(--title-color);
+        }
+
+        .climb-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .climb-item-header:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .climb-item.expanded .climb-item-header {
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--hr-line-color);
+        }
+
+        .climb-item-title {
+            display: flex;
+            align-items: baseline;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .climb-mountain {
+            color: var(--title-color);
+            font-size: 1.4rem;
+        }
+
+        .climb-altitude {
+            color: var(--link-color);
+        }
+
+        .climb-date {
+            color: var(--main-font-color);
+            opacity: 0.8;
+        }
+
+        .gpx-badge {
+            display: inline-block;
+            background: var(--title-color);
+            color: var(--main-bg-color);
+            padding: 0.1rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .expand-icon {
+            color: var(--link-color);
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+
+        .climb-item.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        /* Climb Detail (Accordion Content) */
+        .climb-detail {
+            display: none;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .climb-item.expanded .climb-detail {
+            display: block;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .detail-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .detail-section {
+            margin-bottom: 1rem;
+        }
+
+        .detail-section-title {
+            color: var(--title-color);
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .member-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .member-tag {
+            background: var(--hr-line-color);
+            color: var(--main-font-color);
+            padding: 0.2rem 0.6rem;
+            font-size: 0.95rem;
+        }
+
+        .detail-note {
+            color: var(--main-font-color);
+            line-height: 1.5;
+        }
+
+        /* GPX Section in Detail */
+        .gpx-section {
+            margin-top: 1rem;
+            border-top: 1px solid var(--hr-line-color);
+            padding-top: 1rem;
+        }
+
+        .gpx-map-container {
+            width: 100%;
+            height: 300px;
+            border: 2px solid var(--hr-line-color);
+            margin-bottom: 1rem;
+        }
+
+        /* GPX Stats */
+        .gpx-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .gpx-stat-box {
+            border: 2px solid var(--hr-line-color);
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .gpx-stat-label {
+            color: var(--link-color);
+            font-size: 0.75rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .gpx-stat-value {
+            color: var(--title-color);
+            font-size: 1.2rem;
+        }
+
+        .gpx-stat-unit {
+            color: var(--main-font-color);
+            font-size: 0.8rem;
+        }
+
+        /* Elevation Chart */
+        .chart-container {
+            border: 2px solid var(--hr-line-color);
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-title {
+            margin: 0;
+            color: var(--title-color);
+            font-size: 1rem;
+        }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .play-btn {
+            background: transparent;
+            border: 2px solid var(--link-color);
+            color: var(--link-color);
+            font-family: "VT323", monospace;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover {
+            border-color: var(--link-hover-color);
+            color: var(--link-hover-color);
+        }
+
+        .play-btn.playing {
+            background: var(--link-color);
+            color: var(--main-bg-color);
+        }
+
+        .speed-select {
+            background: transparent;
+            border: 2px solid var(--hr-line-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            font-size: 0.85rem;
+            padding: 0.2rem;
+            cursor: pointer;
+        }
+
+        .speed-select option {
+            background: var(--main-bg-color);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 150px;
+        }
+
+        .chart-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .position-info {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--hr-line-color);
+            font-size: 0.85rem;
+        }
+
+        .position-info.active {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .position-info span {
+            color: var(--link-color);
+        }
+
+        .position-info strong {
+            color: var(--title-color);
+        }
+
+        /* No GPX message */
+        .no-gpx {
+            color: var(--link-color);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            border: 1px dashed var(--hr-line-color);
+        }
+
+        /* Custom Leaflet Popup */
+        .leaflet-popup-content-wrapper {
+            background: var(--main-bg-color);
+            color: var(--main-font-color);
+            border: 2px solid var(--hr-line-color);
+            border-radius: 0;
+            font-family: "VT323", monospace;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--hr-line-color);
+        }
+
+        .leaflet-popup-content {
+            margin: 0.8rem;
+        }
+
+        .popup-mountain {
+            color: var(--title-color);
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .popup-info {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .popup-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            color: var(--link-color);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .popup-link:hover {
+            color: var(--link-hover-color);
+        }
+
+        /* Loading */
+        .loading-gpx {
+            text-align: center;
+            padding: 2rem;
+            color: var(--title-color);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--hr-line-color);
+            font-size: 0.85rem;
+            color: var(--link-color);
+        }
+
+        .footer a {
+            color: var(--link-color);
+        }
+
+        .footer a:hover {
+            color: var(--link-hover-color);
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            #map {
+                height: 300px;
+            }
+
+            .gpx-map-container {
+                height: 250px;
+            }
+
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .stats-bar {
+                gap: 1rem;
+            }
+
+            .climb-item-title {
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+
+            .gpx-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>== CLIMB LOG ==</h1>
+            <a href="/" class="back-link">< BACK</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total:</span>
+                <span class="stat-value" id="total-climbs">0</span>
+                <span class="stat-label">climbs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Highest:</span>
+                <span class="stat-value" id="highest-peak">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Members:</span>
+                <span class="stat-value" id="total-members">0</span>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="toggle-btn active" data-view="list">[LIST]</button>
+            <button class="toggle-btn" data-view="map">[MAP]</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="filter-section">
+            <span class="filter-label">Filter by member:</span>
+            <select class="filter-select" id="member-filter">
+                <option value="">All members</option>
+            </select>
+            <span class="filter-label" style="margin-left: 1rem;">Area:</span>
+            <select class="filter-select" id="area-filter">
+                <option value="">All areas</option>
+            </select>
+        </div>
+
+        <!-- List View (Default) -->
+        <div class="list-view" id="list-container">
+            <ul class="climb-list" id="climb-list"></ul>
+        </div>
+
+        <!-- Map View -->
+        <div class="map-view" id="map-container">
+            <div id="map"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Powered by <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a> |
+            Map data &copy; <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ============================================
+        // Global State
+        // ============================================
+        let logsData = [];
+        let markers = [];
+        let map;
+        let gpxMaps = {}; // Store GPX maps by log ID
+        let gpxCharts = {}; // Store charts by log ID
+        let gpxData = {}; // Store loaded GPX data by log ID
+        let playbackStates = {}; // Store playback states by log ID
+
+        // ============================================
+        // Initialize Main Map
+        // ============================================
+        function initMap() {
+            map = L.map('map').setView([37.0, 138.5], 6);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        // ============================================
+        // Custom Marker Icon
+        // ============================================
+        function createMarkerIcon(hasGpx = false) {
+            const color = hasGpx ? '#1cde33' : '#DE6A1C';
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    width: 24px;
+                    height: 24px;
+                    background: ${color};
+                    border: 3px solid #006D4D;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+                "></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24]
+            });
+        }
+
+        // ============================================
+        // Load Data
+        // ============================================
+        async function loadData() {
+            try {
+                const response = await fetch('data/logs.json');
+                const data = await response.json();
+                logsData = data.logs;
+
+                updateStats();
+                populateFilters();
+                renderList();
+                renderMarkers();
+            } catch (error) {
+                console.error('Failed to load data:', error);
+            }
+        }
+
+        // ============================================
+        // Update Statistics
+        // ============================================
+        function updateStats() {
+            document.getElementById('total-climbs').textContent = logsData.length;
+
+            if (logsData.length > 0) {
+                const highest = logsData.reduce((max, c) => c.altitude > max.altitude ? c : max, logsData[0]);
+                document.getElementById('highest-peak').textContent = `${highest.mountain} (${highest.altitude}m)`;
+            }
+
+            const allMembers = new Set();
+            logsData.forEach(c => c.members.forEach(m => allMembers.add(m)));
+            document.getElementById('total-members').textContent = allMembers.size;
+        }
+
+        // ============================================
+        // Populate Filter Dropdowns
+        // ============================================
+        function populateFilters() {
+            const memberFilter = document.getElementById('member-filter');
+            const areaFilter = document.getElementById('area-filter');
+
+            const members = new Set();
+            const areas = new Set();
+
+            logsData.forEach(log => {
+                log.members.forEach(m => members.add(m));
+                if (log.area) areas.add(log.area);
+            });
+
+            [...members].sort().forEach(member => {
+                const option = document.createElement('option');
+                option.value = member;
+                option.textContent = member;
+                memberFilter.appendChild(option);
+            });
+
+            [...areas].sort().forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                areaFilter.appendChild(option);
+            });
+        }
+
+        // ============================================
+        // Get Filtered Data
+        // ============================================
+        function getFilteredData() {
+            const memberFilter = document.getElementById('member-filter').value;
+            const areaFilter = document.getElementById('area-filter').value;
+
+            return logsData.filter(log => {
+                const memberMatch = !memberFilter || log.members.includes(memberFilter);
+                const areaMatch = !areaFilter || log.area === areaFilter;
+                return memberMatch && areaMatch;
+            });
+        }
+
+        // ============================================
+        // Render List View (Accordion Style)
+        // ============================================
+        function renderList() {
+            const listEl = document.getElementById('climb-list');
+            const filtered = getFilteredData();
+            const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            listEl.innerHTML = sorted.map(log => {
+                const gpxBadge = log.gpx ? '<span class="gpx-badge">GPX</span>' : '';
+                const membersHtml = log.members.map(m => `<span class="member-tag">${m}</span>`).join('');
+
+                return `
+                    <li class="climb-item" id="item-${log.id}">
+                        <div class="climb-item-header" onclick="toggleDetail('${log.id}')">
+                            <div class="climb-item-title">
+                                <span class="climb-mountain">${log.mountain} ${gpxBadge}</span>
+                                <span class="climb-altitude">${log.altitude}m</span>
+                                <span class="climb-date">${log.date}</span>
+                            </div>
+                            <span class="expand-icon">▶</span>
+                        </div>
+                        <div class="climb-detail">
+                            <div class="detail-row">
+                                <div class="detail-info">
+                                    <div class="detail-section">
+                                        <div class="detail-section-title">AREA</div>
+                                        <div>${log.area}</div>
+                                    </div>
+                                    <div class="detail-section">
+                                        <div class="detail-section-title">MEMBERS</div>
+                                        <div class="member-tags">${membersHtml}</div>
+                                    </div>
+                                    ${log.note ? `
+                                    <div class="detail-section">
+                                        <div class="detail-section-title">NOTE</div>
+                                        <div class="detail-note">${log.note}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="gpx-section" id="gpx-section-${log.id}">
+                                ${log.gpx ? `
+                                    <div class="loading-gpx" id="loading-${log.id}">Loading GPX data...</div>
+                                    <div id="gpx-content-${log.id}" style="display: none;">
+                                        <div class="gpx-map-container" id="gpx-map-${log.id}"></div>
+                                        <div class="gpx-stats-grid">
+                                            <div class="gpx-stat-box">
+                                                <div class="gpx-stat-label">DISTANCE</div>
+                                                <div class="gpx-stat-value" id="stat-distance-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">km</div>
+                                            </div>
+                                            <div class="gpx-stat-box">
+                                                <div class="gpx-stat-label">ELEV GAIN</div>
+                                                <div class="gpx-stat-value" id="stat-gain-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">m</div>
+                                            </div>
+                                            <div class="gpx-stat-box">
+                                                <div class="gpx-stat-label">MAX ELEV</div>
+                                                <div class="gpx-stat-value" id="stat-max-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">m</div>
+                                            </div>
+                                            <div class="gpx-stat-box">
+                                                <div class="gpx-stat-label">DURATION</div>
+                                                <div class="gpx-stat-value" id="stat-duration-${log.id}">-</div>
+                                                <div class="gpx-stat-unit"></div>
+                                            </div>
+                                        </div>
+                                        <div class="chart-container">
+                                            <div class="chart-header">
+                                                <div class="chart-title">ELEVATION PROFILE</div>
+                                                <div class="playback-controls">
+                                                    <select class="speed-select" id="speed-${log.id}">
+                                                        <option value="50">x4</option>
+                                                        <option value="100" selected>x2</option>
+                                                        <option value="200">x1</option>
+                                                        <option value="400">x0.5</option>
+                                                    </select>
+                                                    <button class="play-btn" id="play-${log.id}" onclick="togglePlayback('${log.id}')">▶ PLAY</button>
+                                                </div>
+                                            </div>
+                                            <div class="chart-wrapper">
+                                                <canvas id="chart-${log.id}"></canvas>
+                                            </div>
+                                            <div class="position-info" id="position-${log.id}">
+                                                <div><span>Distance:</span> <strong id="info-dist-${log.id}">-</strong></div>
+                                                <div><span>Elevation:</span> <strong id="info-elev-${log.id}">-</strong></div>
+                                                <div><span>Time:</span> <strong id="info-time-${log.id}">-</strong></div>
+                                                <div><span>Elapsed:</span> <strong id="info-elapsed-${log.id}">-</strong></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : '<div class="no-gpx">No GPX data available</div>'}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // Toggle Detail (Accordion)
+        // ============================================
+        function toggleDetail(logId) {
+            const item = document.getElementById(`item-${logId}`);
+            const wasExpanded = item.classList.contains('expanded');
+
+            // Close all other items
+            document.querySelectorAll('.climb-item.expanded').forEach(el => {
+                if (el.id !== `item-${logId}`) {
+                    el.classList.remove('expanded');
+                    const otherId = el.id.replace('item-', '');
+                    stopPlayback(otherId);
+                }
+            });
+
+            if (wasExpanded) {
+                item.classList.remove('expanded');
+                stopPlayback(logId);
+            } else {
+                item.classList.add('expanded');
+
+                // Load GPX if available and not already loaded
+                const log = logsData.find(l => l.id === logId);
+                if (log && log.gpx && !gpxData[logId]) {
+                    loadGPX(logId, log.gpx);
+                } else if (gpxMaps[logId]) {
+                    // Invalidate map size when re-opening
+                    setTimeout(() => gpxMaps[logId].invalidateSize(), 100);
+                }
+
+                // Scroll to the item
+                setTimeout(() => {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        // ============================================
+        // Render Markers on Map
+        // ============================================
+        function renderMarkers() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const filtered = getFilteredData();
+
+            filtered.forEach(log => {
+                if (!log.location) return;
+
+                const marker = L.marker([log.location.lat, log.location.lng], {
+                    icon: createMarkerIcon(!!log.gpx)
+                }).addTo(map);
+
+                const gpxBadge = log.gpx ? '<span style="background:#1cde33;color:#006D4D;padding:0 4px;margin-left:5px;font-size:0.8rem;">GPX</span>' : '';
+                const popupContent = `
+                    <div class="popup-mountain">${log.mountain}${gpxBadge}</div>
+                    <div class="popup-info">
+                        ${log.altitude}m | ${log.area}<br>
+                        ${log.date}<br>
+                        ${log.members.join(', ')}
+                    </div>
+                    <span class="popup-link" onclick="showInList('${log.id}')">Show in list >></span>
+                `;
+
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // ============================================
+        // Show in List (from Map popup)
+        // ============================================
+        function showInList(logId) {
+            // Switch to list view
+            document.querySelector('[data-view="list"]').click();
+
+            // Expand the item
+            setTimeout(() => {
+                toggleDetail(logId);
+            }, 100);
+        }
+
+        // ============================================
+        // GPX Functions
+        // ============================================
+        function parseGPX(gpxText) {
+            const parser = new DOMParser();
+            const gpx = parser.parseFromString(gpxText, 'text/xml');
+
+            const trackpoints = gpx.querySelectorAll('trkpt');
+            const points = [];
+            let totalDistance = 0;
+            let totalElevationGain = 0;
+            let maxElevation = -Infinity;
+            let minElevation = Infinity;
+            let startTime = null;
+            let endTime = null;
+
+            let prevPoint = null;
+
+            trackpoints.forEach((trkpt, index) => {
+                const lat = parseFloat(trkpt.getAttribute('lat'));
+                const lon = parseFloat(trkpt.getAttribute('lon'));
+                const eleNode = trkpt.querySelector('ele');
+                const timeNode = trkpt.querySelector('time');
+
+                const ele = eleNode ? parseFloat(eleNode.textContent) : 0;
+                const time = timeNode ? new Date(timeNode.textContent) : null;
+
+                if (index === 0 && time) startTime = time;
+                if (time) endTime = time;
+
+                if (ele > maxElevation) maxElevation = ele;
+                if (ele < minElevation) minElevation = ele;
+
+                if (prevPoint) {
+                    const dist = calculateDistance(prevPoint.lat, prevPoint.lon, lat, lon);
+                    totalDistance += dist;
+
+                    const elevDiff = ele - prevPoint.ele;
+                    if (elevDiff > 0) totalElevationGain += elevDiff;
+                }
+
+                points.push({ lat, lon, ele, time, distance: totalDistance });
+                prevPoint = { lat, lon, ele };
+            });
+
+            return {
+                points,
+                stats: {
+                    distance: totalDistance,
+                    elevationGain: totalElevationGain,
+                    maxElevation,
+                    minElevation,
+                    startTime,
+                    endTime,
+                    duration: startTime && endTime ? (endTime - startTime) / 1000 : 0
+                }
+            };
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        async function loadGPX(logId, gpxFile) {
+            try {
+                const response = await fetch(`data/logs/${gpxFile}`);
+                const gpxText = await response.text();
+                const trackData = parseGPX(gpxText);
+
+                gpxData[logId] = trackData;
+
+                // Hide loading, show content
+                document.getElementById(`loading-${logId}`).style.display = 'none';
+                document.getElementById(`gpx-content-${logId}`).style.display = 'block';
+
+                // Initialize GPX map
+                initGPXMap(logId, trackData);
+
+                // Update stats
+                document.getElementById(`stat-distance-${logId}`).textContent = trackData.stats.distance.toFixed(1);
+                document.getElementById(`stat-gain-${logId}`).textContent = Math.round(trackData.stats.elevationGain);
+                document.getElementById(`stat-max-${logId}`).textContent = Math.round(trackData.stats.maxElevation);
+                document.getElementById(`stat-duration-${logId}`).textContent = formatDuration(trackData.stats.duration);
+
+                // Draw elevation chart
+                drawElevationChart(logId, trackData.points);
+
+            } catch (error) {
+                console.error('Failed to load GPX:', error);
+                document.getElementById(`loading-${logId}`).textContent = 'Failed to load GPX data';
+            }
+        }
+
+        function initGPXMap(logId, trackData) {
+            const mapContainer = document.getElementById(`gpx-map-${logId}`);
+            const gpxMap = L.map(mapContainer).setView([36.5, 138.5], 6);
+
+            const gsiLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+                attribution: '&copy; 国土地理院',
+                maxZoom: 18
+            });
+
+            const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenTopoMap',
+                maxZoom: 17
+            });
+
+            gsiLayer.addTo(gpxMap);
+            L.control.layers({ '地理院地図': gsiLayer, 'OpenTopoMap': topoLayer }).addTo(gpxMap);
+
+            // Draw track
+            const latlngs = trackData.points.map(p => [p.lat, p.lon]);
+            const trackLayer = L.polyline(latlngs, {
+                color: '#DE6A1C',
+                weight: 4,
+                opacity: 0.9
+            }).addTo(gpxMap);
+
+            // Start/End markers
+            const startIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="width:18px;height:18px;background:#1cde33;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#006D4D;font-family:VT323;font-size:11px;font-weight:bold;">S</div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+
+            const endIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="width:18px;height:18px;background:#F24C3D;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:VT323;font-size:11px;font-weight:bold;">G</div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+
+            L.marker(latlngs[0], { icon: startIcon }).addTo(gpxMap);
+            L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(gpxMap);
+
+            // Position marker for playback
+            const positionIcon = L.divIcon({
+                className: 'position-marker',
+                html: `<div style="width:14px;height:14px;background:#ffff00;border:2px solid #006D4D;border-radius:50%;box-shadow:0 0 8px rgba(255,255,0,0.8);"></div>`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+            const positionMarker = L.marker(latlngs[0], { icon: positionIcon, zIndexOffset: 1000 });
+
+            gpxMap.fitBounds(trackLayer.getBounds().pad(0.1));
+
+            gpxMaps[logId] = gpxMap;
+            playbackStates[logId] = {
+                positionMarker,
+                isPlaying: false,
+                index: 0,
+                interval: null
+            };
+        }
+
+        function drawElevationChart(logId, points) {
+            const ctx = document.getElementById(`chart-${logId}`).getContext('2d');
+
+            // Sample points
+            const sampleRate = Math.max(1, Math.floor(points.length / 200));
+            const sampledPoints = points.filter((_, i) => i % sampleRate === 0);
+
+            playbackStates[logId].sampledPoints = sampledPoints;
+
+            const labels = sampledPoints.map(p => p.distance.toFixed(1));
+            const elevations = sampledPoints.map(p => p.ele);
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: elevations,
+                        borderColor: '#DE6A1C',
+                        backgroundColor: 'rgba(222, 106, 28, 0.3)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: {
+                            display: true,
+                            ticks: { color: '#e39d6e', font: { family: 'VT323' }, maxTicksLimit: 6 },
+                            grid: { color: 'rgba(0, 88, 63, 0.5)' }
+                        },
+                        y: {
+                            display: true,
+                            ticks: { color: '#e39d6e', font: { family: 'VT323' } },
+                            grid: { color: 'rgba(0, 88, 63, 0.5)' }
+                        }
+                    },
+                    onHover: (event, elements) => {
+                        if (playbackStates[logId].isPlaying) return;
+                        if (elements.length > 0) {
+                            updatePositionMarker(logId, elements[0].index);
+                        }
+                    }
+                }
+            });
+
+            gpxCharts[logId] = chart;
+
+            // Mouse leave handler
+            document.getElementById(`chart-${logId}`).addEventListener('mouseleave', () => {
+                if (!playbackStates[logId].isPlaying) {
+                    const state = playbackStates[logId];
+                    if (gpxMaps[logId].hasLayer(state.positionMarker)) {
+                        gpxMaps[logId].removeLayer(state.positionMarker);
+                    }
+                    document.getElementById(`position-${logId}`).classList.remove('active');
+                }
+            });
+        }
+
+        function updatePositionMarker(logId, index) {
+            const state = playbackStates[logId];
+            const point = state.sampledPoints[index];
+            if (!point) return;
+
+            state.positionMarker.setLatLng([point.lat, point.lon]);
+            if (!gpxMaps[logId].hasLayer(state.positionMarker)) {
+                state.positionMarker.addTo(gpxMaps[logId]);
+            }
+
+            document.getElementById(`info-dist-${logId}`).textContent = point.distance.toFixed(2) + ' km';
+            document.getElementById(`info-elev-${logId}`).textContent = Math.round(point.ele) + ' m';
+
+            if (point.time) {
+                document.getElementById(`info-time-${logId}`).textContent = point.time.toLocaleTimeString('ja-JP');
+                const startTime = state.sampledPoints[0].time;
+                if (startTime) {
+                    document.getElementById(`info-elapsed-${logId}`).textContent = formatDuration((point.time - startTime) / 1000);
+                }
+            } else {
+                document.getElementById(`info-time-${logId}`).textContent = '-';
+                document.getElementById(`info-elapsed-${logId}`).textContent = '-';
+            }
+
+            document.getElementById(`position-${logId}`).classList.add('active');
+        }
+
+        function togglePlayback(logId) {
+            const state = playbackStates[logId];
+            if (state.isPlaying) {
+                stopPlayback(logId);
+            } else {
+                startPlayback(logId);
+            }
+        }
+
+        function startPlayback(logId) {
+            const state = playbackStates[logId];
+            if (!state.sampledPoints || state.sampledPoints.length === 0) return;
+
+            state.isPlaying = true;
+            document.getElementById(`play-${logId}`).textContent = '■ STOP';
+            document.getElementById(`play-${logId}`).classList.add('playing');
+
+            const speed = parseInt(document.getElementById(`speed-${logId}`).value);
+
+            if (state.index >= state.sampledPoints.length - 1) {
+                state.index = 0;
+            }
+
+            state.interval = setInterval(() => {
+                if (state.index >= state.sampledPoints.length - 1) {
+                    stopPlayback(logId);
+                    return;
+                }
+
+                updatePositionMarker(logId, state.index);
+
+                if (gpxCharts[logId]) {
+                    gpxCharts[logId].setActiveElements([{ datasetIndex: 0, index: state.index }]);
+                    gpxCharts[logId].update('none');
+                }
+
+                state.index++;
+            }, speed);
+        }
+
+        function stopPlayback(logId) {
+            const state = playbackStates[logId];
+            if (!state) return;
+
+            state.isPlaying = false;
+
+            const playBtn = document.getElementById(`play-${logId}`);
+            if (playBtn) {
+                playBtn.textContent = '▶ PLAY';
+                playBtn.classList.remove('playing');
+            }
+
+            if (state.interval) {
+                clearInterval(state.interval);
+                state.interval = null;
+            }
+        }
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+
+        // View toggle
+        let mapInitialized = false;
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const view = btn.dataset.view;
+                if (view === 'list') {
+                    document.getElementById('list-container').classList.remove('hidden');
+                    document.getElementById('map-container').classList.remove('active');
+                } else {
+                    document.getElementById('list-container').classList.add('hidden');
+                    document.getElementById('map-container').classList.add('active');
+                    setTimeout(() => {
+                        map.invalidateSize();
+                        if (!mapInitialized) {
+                            map.setView([37.0, 138.5], 6);
+                            mapInitialized = true;
+                        }
+                    }, 100);
+                }
+            });
+        });
+
+        // Filter change handlers
+        document.getElementById('member-filter').addEventListener('change', () => {
+            renderList();
+            renderMarkers();
+        });
+        document.getElementById('area-filter').addEventListener('change', () => {
+            renderList();
+            renderMarkers();
+        });
+
+        // ============================================
+        // Initialize
+        // ============================================
+        initMap();
+        loadData();
+    </script>
+</body>
+</html>
