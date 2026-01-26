@@ -22,7 +22,7 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 
 - Avo
 - Kawai
-- Kenta Tanaka
+- Kanata Tanaka
 - Koyama
 - momo
 - Ono
