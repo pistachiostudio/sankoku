@@ -34,5 +34,6 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 - Shigebayashi(CL)
 - Woupa
 - 800
+- Ryu Wakimoto (Support Rider)
 
 ---
