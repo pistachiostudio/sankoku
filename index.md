@@ -1,11 +1,6 @@
 # Welcome to Kusotori Sankoku Kai
 
--SHIGEBAYASHI-  
--WAS-  
--INJURED-  
--MCL-  
-
-He is BROKEN. Thank you. ⛷️=3
+Just. We enjoy Skiing ⛷️=3
 
 ![](img/R0006536.JPG)
 
@@ -30,10 +25,11 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 - Koyama
 - Ono
 - PARKGOLF
+- Ryu Wakimoto (Support Rider)
 - Sasadesune
 - Shigebayashi(CL)
 - Woupa
 - 800
-- Ryu Wakimoto (Support Rider)
+
 
 ---
