@@ -22,13 +22,16 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 
 - Avo
 - Kawai
+- Kenta Tanaka
 - Koyama
+- momo
 - Ono
 - PARKGOLF
 - Ryu Wakimoto (Support Rider)
 - Sasadesune
 - Shigebayashi(CL)
 - Woupa
+- Yui Wakimoto
 - 800
 
 
