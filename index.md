@@ -14,7 +14,8 @@ Join us once, and you're one of us.
 
 Let's explore peaks and trails together—any season, any country, any mountain.
 
-[=> Climb](climb_game.html)
+[=> Climb](climb_game.html)  
+[=> View Logs (Under construction)](log.html)
 
 ---
 
