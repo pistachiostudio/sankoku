@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>GPX Viewer | 糞取山酷会</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --main-bg-color: #006D4D;
+            --main-font-color: #DE6A1C;
+            --title-color: #1cde33;
+            --link-color: #e39d6e;
+            --link-hover-color: #00ff08;
+            --hr-line-color: #00583f;
+            --selection-bg-color: #F24C3D;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--main-bg-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            margin: 0;
+            padding: 1rem;
+            font-size: 18px;
+            min-height: 100vh;
+        }
+
+        ::selection {
+            color: #ffffff;
+            background-color: var(--selection-bg-color);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .header h1 {
+            color: var(--title-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .back-link {
+            color: var(--link-color);
+            text-decoration: none;
+            border: 2px solid var(--link-color);
+            padding: 0.3rem 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+        }
+
+        /* Track Buttons */
+        .sample-section {
+            margin-bottom: 1rem;
+        }
+
+        .sample-btn {
+            background: transparent;
+            border: 2px solid var(--hr-line-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            font-size: 1rem;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sample-btn:hover {
+            border-color: var(--link-hover-color);
+            color: var(--link-hover-color);
+        }
+
+        .sample-btn.active {
+            background: var(--hr-line-color);
+            color: var(--title-color);
+        }
+
+        /* Map Container */
+        #map {
+            width: 100%;
+            height: 400px;
+            border: 3px solid var(--hr-line-color);
+            position: relative;
+        }
+
+        #map::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+
+        .stat-box {
+            border: 2px solid var(--hr-line-color);
+            padding: 0.8rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--link-color);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            color: var(--title-color);
+            font-size: 1.5rem;
+        }
+
+        .stat-unit {
+            color: var(--main-font-color);
+            font-size: 0.9rem;
+        }
+
+        /* Elevation Chart */
+        .chart-container {
+            border: 3px solid var(--hr-line-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chart-title {
+            color: var(--title-color);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        #elevation-chart {
+            width: 100%;
+            height: 150px;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--title-color);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Track Info */
+        .track-info {
+            border: 2px solid var(--title-color);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .track-info.active {
+            display: block;
+        }
+
+        .track-name {
+            color: var(--title-color);
+            font-size: 1.4rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .track-date {
+            color: var(--link-color);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--hr-line-color);
+            font-size: 0.85rem;
+            color: var(--link-color);
+        }
+
+        .footer a {
+            color: var(--link-color);
+        }
+
+        .footer a:hover {
+            color: var(--link-hover-color);
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            #map {
+                height: 300px;
+            }
+
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>== GPX VIEWER ==</h1>
+            <a href="/" class="back-link">< BACK</a>
+        </div>
+
+        <!-- Track Selection -->
+        <div class="sample-section">
+            <span style="color: var(--link-color);">Select track: </span>
+            <button class="sample-btn" onclick="loadGPXTrack('oasahi')">Oasahi-dake</button>
+            <button class="sample-btn" onclick="loadGPXTrack('kumotori')">Kumotori-yama</button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">Loading GPX data...</div>
+
+        <!-- Track Info -->
+        <div class="track-info" id="track-info">
+            <h2 class="track-name" id="track-name">-</h2>
+            <div class="track-date" id="track-date">-</div>
+        </div>
+
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">DISTANCE</div>
+                <div class="stat-value" id="stat-distance">-</div>
+                <div class="stat-unit">km</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">ELEVATION GAIN</div>
+                <div class="stat-value" id="stat-elevation-gain">-</div>
+                <div class="stat-unit">m</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">MAX ELEVATION</div>
+                <div class="stat-value" id="stat-max-elevation">-</div>
+                <div class="stat-unit">m</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">DURATION</div>
+                <div class="stat-value" id="stat-duration">-</div>
+                <div class="stat-unit"></div>
+            </div>
+        </div>
+
+        <!-- Elevation Chart -->
+        <div class="chart-container">
+            <div class="chart-title">ELEVATION PROFILE</div>
+            <canvas id="elevation-chart"></canvas>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Powered by <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a> |
+            Map data &copy; <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Global state
+        let map;
+        let currentTrack = null;
+        let elevationChart = null;
+        let trackLayer = null;
+        let startMarker = null;
+        let endMarker = null;
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([36.5, 138.5], 6);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        // Parse GPX file
+        function parseGPX(gpxText) {
+            const parser = new DOMParser();
+            const gpx = parser.parseFromString(gpxText, 'text/xml');
+
+            const trackpoints = gpx.querySelectorAll('trkpt');
+            const points = [];
+            let totalDistance = 0;
+            let totalElevationGain = 0;
+            let maxElevation = -Infinity;
+            let minElevation = Infinity;
+            let startTime = null;
+            let endTime = null;
+
+            let prevPoint = null;
+
+            trackpoints.forEach((trkpt, index) => {
+                const lat = parseFloat(trkpt.getAttribute('lat'));
+                const lon = parseFloat(trkpt.getAttribute('lon'));
+                const eleNode = trkpt.querySelector('ele');
+                const timeNode = trkpt.querySelector('time');
+
+                const ele = eleNode ? parseFloat(eleNode.textContent) : 0;
+                const time = timeNode ? new Date(timeNode.textContent) : null;
+
+                if (index === 0 && time) startTime = time;
+                if (time) endTime = time;
+
+                if (ele > maxElevation) maxElevation = ele;
+                if (ele < minElevation) minElevation = ele;
+
+                if (prevPoint) {
+                    const dist = calculateDistance(prevPoint.lat, prevPoint.lon, lat, lon);
+                    totalDistance += dist;
+
+                    const elevDiff = ele - prevPoint.ele;
+                    if (elevDiff > 0) totalElevationGain += elevDiff;
+                }
+
+                points.push({
+                    lat,
+                    lon,
+                    ele,
+                    time,
+                    distance: totalDistance
+                });
+
+                prevPoint = { lat, lon, ele };
+            });
+
+            // Get track name
+            const nameNode = gpx.querySelector('trk > name');
+            const trackName = nameNode ? nameNode.textContent : 'Unnamed Track';
+
+            return {
+                name: trackName,
+                points,
+                stats: {
+                    distance: totalDistance,
+                    elevationGain: totalElevationGain,
+                    maxElevation,
+                    minElevation,
+                    startTime,
+                    endTime,
+                    duration: startTime && endTime ? (endTime - startTime) / 1000 : 0
+                }
+            };
+        }
+
+        // Calculate distance between two points (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        // Display track on map
+        function displayTrack(trackData) {
+            // Clear previous track
+            if (trackLayer) map.removeLayer(trackLayer);
+            if (startMarker) map.removeLayer(startMarker);
+            if (endMarker) map.removeLayer(endMarker);
+
+            const latlngs = trackData.points.map(p => [p.lat, p.lon]);
+
+            // Draw track line
+            trackLayer = L.polyline(latlngs, {
+                color: '#DE6A1C',
+                weight: 4,
+                opacity: 0.9
+            }).addTo(map);
+
+            // Start marker
+            const startIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    width: 20px;
+                    height: 20px;
+                    background: #1cde33;
+                    border: 3px solid #006D4D;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #006D4D;
+                    font-family: VT323;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">S</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            // End marker
+            const endIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    width: 20px;
+                    height: 20px;
+                    background: #F24C3D;
+                    border: 3px solid #006D4D;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-family: VT323;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">G</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            startMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(map);
+            endMarker = L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(map);
+
+            // Fit map to track
+            map.fitBounds(trackLayer.getBounds().pad(0.1));
+
+            // Update stats
+            updateStats(trackData.stats);
+
+            // Update track info
+            document.getElementById('track-name').textContent = trackData.name || 'GPX Track';
+            if (trackData.stats.startTime) {
+                const dateStr = trackData.stats.startTime.toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('track-date').textContent = dateStr;
+            }
+            document.getElementById('track-info').classList.add('active');
+
+            // Draw elevation chart
+            drawElevationChart(trackData.points);
+        }
+
+        // Update stats display
+        function updateStats(stats) {
+            document.getElementById('stat-distance').textContent = stats.distance.toFixed(1);
+            document.getElementById('stat-elevation-gain').textContent = Math.round(stats.elevationGain);
+            document.getElementById('stat-max-elevation').textContent = Math.round(stats.maxElevation);
+            document.getElementById('stat-duration').textContent = formatDuration(stats.duration);
+        }
+
+        // Draw elevation chart
+        function drawElevationChart(points) {
+            const ctx = document.getElementById('elevation-chart').getContext('2d');
+
+            // Sample points for performance (max 200 points)
+            const sampleRate = Math.max(1, Math.floor(points.length / 200));
+            const sampledPoints = points.filter((_, i) => i % sampleRate === 0);
+
+            const labels = sampledPoints.map(p => p.distance.toFixed(1));
+            const elevations = sampledPoints.map(p => p.ele);
+
+            if (elevationChart) {
+                elevationChart.destroy();
+            }
+
+            elevationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: elevations,
+                        borderColor: '#DE6A1C',
+                        backgroundColor: 'rgba(222, 106, 28, 0.3)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => `${items[0].label} km`,
+                                label: (item) => `${Math.round(item.raw)} m`
+                            },
+                            backgroundColor: '#006D4D',
+                            titleColor: '#1cde33',
+                            bodyColor: '#DE6A1C',
+                            borderColor: '#00583f',
+                            borderWidth: 1,
+                            titleFont: { family: 'VT323' },
+                            bodyFont: { family: 'VT323' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Distance (km)',
+                                color: '#e39d6e',
+                                font: { family: 'VT323', size: 14 }
+                            },
+                            ticks: {
+                                color: '#e39d6e',
+                                font: { family: 'VT323' },
+                                maxTicksLimit: 8
+                            },
+                            grid: {
+                                color: 'rgba(0, 88, 63, 0.5)'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Elevation (m)',
+                                color: '#e39d6e',
+                                font: { family: 'VT323', size: 14 }
+                            },
+                            ticks: {
+                                color: '#e39d6e',
+                                font: { family: 'VT323' }
+                            },
+                            grid: {
+                                color: 'rgba(0, 88, 63, 0.5)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load GPX from URL
+        async function loadGPX(url) {
+            showLoading(true);
+            try {
+                const response = await fetch(url);
+                const gpxText = await response.text();
+                const trackData = parseGPX(gpxText);
+                displayTrack(trackData);
+            } catch (error) {
+                console.error('Failed to load GPX:', error);
+                alert('Failed to load GPX file');
+            }
+            showLoading(false);
+        }
+
+        // Load GPX track
+        function loadGPXTrack(name) {
+            // Update active button
+            document.querySelectorAll('.sample-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            loadGPX(`data/gpx/${name}.gpx`);
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('active', show);
+        }
+
+        // Initialize
+        initMap();
+    </script>
+</body>
+</html>
