@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>登山記録マップ | 糞取山酷会</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --main-bg-color: #006D4D;
+            --main-font-color: #DE6A1C;
+            --title-color: #1cde33;
+            --link-color: #e39d6e;
+            --link-hover-color: #00ff08;
+            --hr-line-color: #00583f;
+            --selection-bg-color: #F24C3D;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--main-bg-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            margin: 0;
+            padding: 1rem;
+            font-size: 18px;
+            min-height: 100vh;
+        }
+
+        ::selection {
+            color: #ffffff;
+            background-color: var(--selection-bg-color);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .header h1 {
+            color: var(--title-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .back-link {
+            color: var(--link-color);
+            text-decoration: none;
+            border: 2px solid var(--link-color);
+            padding: 0.3rem 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 2px solid var(--hr-line-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            font-size: 1rem;
+            padding: 0.3rem 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover {
+            border-color: var(--link-hover-color);
+            color: var(--link-hover-color);
+        }
+
+        .toggle-btn.active {
+            background: var(--hr-line-color);
+            color: var(--title-color);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border: 1px dashed var(--hr-line-color);
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.3rem;
+        }
+
+        .stat-label {
+            color: var(--link-color);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: var(--title-color);
+            font-size: 1.3rem;
+        }
+
+        /* Map Container */
+        #map {
+            width: 100%;
+            height: 450px;
+            border: 3px solid var(--hr-line-color);
+            position: relative;
+        }
+
+        /* Scanline overlay for map */
+        #map::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* List View */
+        .list-view {
+            display: none;
+        }
+
+        .list-view.active {
+            display: block;
+        }
+
+        .map-view {
+            display: block;
+        }
+
+        .map-view.hidden {
+            display: none;
+        }
+
+        /* Climb List */
+        .climb-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .climb-item {
+            border: 2px solid var(--hr-line-color);
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .climb-item:hover {
+            border-color: var(--link-hover-color);
+            transform: translateX(5px);
+        }
+
+        .climb-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .climb-mountain {
+            color: var(--title-color);
+            font-size: 1.4rem;
+        }
+
+        .climb-altitude {
+            color: var(--link-color);
+        }
+
+        .climb-date {
+            color: var(--main-font-color);
+            opacity: 0.8;
+        }
+
+        .climb-members {
+            color: var(--link-color);
+            font-size: 0.95rem;
+        }
+
+        .climb-note {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            display: none;
+            border: 3px solid var(--title-color);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .detail-panel.active {
+            display: block;
+        }
+
+        .detail-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.8rem;
+            color: var(--link-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .detail-close:hover {
+            color: var(--link-hover-color);
+        }
+
+        .detail-title {
+            color: var(--title-color);
+            font-size: 2rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .detail-meta {
+            color: var(--link-color);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .detail-section {
+            margin-top: 1rem;
+        }
+
+        .detail-section-title {
+            color: var(--title-color);
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--hr-line-color);
+            padding-bottom: 0.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .member-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .member-tag {
+            background: var(--hr-line-color);
+            color: var(--main-font-color);
+            padding: 0.2rem 0.6rem;
+            font-size: 0.95rem;
+        }
+
+        /* Custom Leaflet Popup */
+        .leaflet-popup-content-wrapper {
+            background: var(--main-bg-color);
+            color: var(--main-font-color);
+            border: 2px solid var(--hr-line-color);
+            border-radius: 0;
+            font-family: "VT323", monospace;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--hr-line-color);
+        }
+
+        .leaflet-popup-content {
+            margin: 0.8rem;
+        }
+
+        .popup-mountain {
+            color: var(--title-color);
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .popup-info {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .popup-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            color: var(--link-color);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .popup-link:hover {
+            color: var(--link-hover-color);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--hr-line-color);
+            font-size: 0.85rem;
+            color: var(--link-color);
+        }
+
+        .footer a {
+            color: var(--link-color);
+        }
+
+        .footer a:hover {
+            color: var(--link-hover-color);
+        }
+
+        /* Filter */
+        .filter-section {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border: 1px dashed var(--hr-line-color);
+        }
+
+        .filter-label {
+            color: var(--link-color);
+            margin-right: 0.5rem;
+        }
+
+        .filter-select {
+            background: var(--main-bg-color);
+            color: var(--main-font-color);
+            border: 2px solid var(--hr-line-color);
+            font-family: "VT323", monospace;
+            font-size: 1rem;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--link-hover-color);
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            #map {
+                height: 350px;
+            }
+
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .stats-bar {
+                gap: 1rem;
+            }
+
+            .climb-item-header {
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>== CLIMB RECORDS ==</h1>
+            <a href="/" class="back-link">< BACK</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total:</span>
+                <span class="stat-value" id="total-climbs">0</span>
+                <span class="stat-label">climbs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Highest:</span>
+                <span class="stat-value" id="highest-peak">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Members:</span>
+                <span class="stat-value" id="total-members">0</span>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="toggle-btn active" data-view="map">[MAP]</button>
+            <button class="toggle-btn" data-view="list">[LIST]</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="filter-section">
+            <span class="filter-label">Filter by member:</span>
+            <select class="filter-select" id="member-filter">
+                <option value="">All members</option>
+            </select>
+            <span class="filter-label" style="margin-left: 1rem;">Area:</span>
+            <select class="filter-select" id="area-filter">
+                <option value="">All areas</option>
+            </select>
+        </div>
+
+        <!-- Map View -->
+        <div class="map-view" id="map-container">
+            <div id="map"></div>
+        </div>
+
+        <!-- List View -->
+        <div class="list-view" id="list-container">
+            <ul class="climb-list" id="climb-list"></ul>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+            <span class="detail-close" id="detail-close">x</span>
+            <h2 class="detail-title" id="detail-title"></h2>
+            <div class="detail-meta" id="detail-meta"></div>
+            <div class="detail-section">
+                <div class="detail-section-title">MEMBERS</div>
+                <div class="member-tags" id="detail-members"></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">NOTE</div>
+                <div id="detail-note"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Powered by <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a> |
+            Map data &copy; <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Global state
+        let climbsData = [];
+        let markers = [];
+        let map;
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([36.5, 138.5], 6);
+
+            // Use CartoDB Positron for a cleaner look that works with retro styling
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        // Custom marker icon
+        function createMarkerIcon() {
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    width: 24px;
+                    height: 24px;
+                    background: #DE6A1C;
+                    border: 3px solid #006D4D;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+                "></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24]
+            });
+        }
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('data/climbs.json');
+                const data = await response.json();
+                climbsData = data.climbs;
+
+                updateStats();
+                populateFilters();
+                renderMarkers();
+                renderList();
+            } catch (error) {
+                console.error('Failed to load climb data:', error);
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('total-climbs').textContent = climbsData.length;
+
+            const highest = climbsData.reduce((max, c) => c.altitude > max.altitude ? c : max, climbsData[0]);
+            document.getElementById('highest-peak').textContent = `${highest.mountain} (${highest.altitude}m)`;
+
+            const allMembers = new Set();
+            climbsData.forEach(c => c.members.forEach(m => allMembers.add(m)));
+            document.getElementById('total-members').textContent = allMembers.size;
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            const memberFilter = document.getElementById('member-filter');
+            const areaFilter = document.getElementById('area-filter');
+
+            const members = new Set();
+            const areas = new Set();
+
+            climbsData.forEach(climb => {
+                climb.members.forEach(m => members.add(m));
+                if (climb.area) areas.add(climb.area);
+            });
+
+            [...members].sort().forEach(member => {
+                const option = document.createElement('option');
+                option.value = member;
+                option.textContent = member;
+                memberFilter.appendChild(option);
+            });
+
+            [...areas].sort().forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                areaFilter.appendChild(option);
+            });
+        }
+
+        // Get filtered data
+        function getFilteredData() {
+            const memberFilter = document.getElementById('member-filter').value;
+            const areaFilter = document.getElementById('area-filter').value;
+
+            return climbsData.filter(climb => {
+                const memberMatch = !memberFilter || climb.members.includes(memberFilter);
+                const areaMatch = !areaFilter || climb.area === areaFilter;
+                return memberMatch && areaMatch;
+            });
+        }
+
+        // Render markers on map
+        function renderMarkers() {
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const filtered = getFilteredData();
+
+            filtered.forEach(climb => {
+                const marker = L.marker([climb.location.lat, climb.location.lng], {
+                    icon: createMarkerIcon()
+                }).addTo(map);
+
+                const popupContent = `
+                    <div class="popup-mountain">${climb.mountain}</div>
+                    <div class="popup-info">
+                        ${climb.altitude}m | ${climb.area}<br>
+                        ${climb.date}<br>
+                        ${climb.members.join(', ')}
+                    </div>
+                    <span class="popup-link" onclick="showDetail('${climb.id}')">Details >></span>
+                `;
+
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+
+            // Fit bounds if we have markers
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // Render list view
+        function renderList() {
+            const listEl = document.getElementById('climb-list');
+            const filtered = getFilteredData();
+
+            // Sort by date descending
+            const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            listEl.innerHTML = sorted.map(climb => `
+                <li class="climb-item" onclick="showDetail('${climb.id}')">
+                    <div class="climb-item-header">
+                        <span class="climb-mountain">${climb.mountain}</span>
+                        <span class="climb-altitude">${climb.altitude}m</span>
+                        <span class="climb-date">${climb.date}</span>
+                    </div>
+                    <div class="climb-members">${climb.members.join(', ')}</div>
+                    <div class="climb-note">${climb.note}</div>
+                </li>
+            `).join('');
+        }
+
+        // Show detail panel
+        function showDetail(climbId) {
+            const climb = climbsData.find(c => c.id === climbId);
+            if (!climb) return;
+
+            document.getElementById('detail-title').textContent = climb.mountain;
+            document.getElementById('detail-meta').innerHTML = `
+                Altitude: ${climb.altitude}m<br>
+                Area: ${climb.area}<br>
+                Date: ${climb.date}
+            `;
+            document.getElementById('detail-members').innerHTML = climb.members
+                .map(m => `<span class="member-tag">${m}</span>`)
+                .join('');
+            document.getElementById('detail-note').textContent = climb.note || 'No notes.';
+
+            document.getElementById('detail-panel').classList.add('active');
+
+            // Scroll to detail panel
+            document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // View toggle
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const view = btn.dataset.view;
+                if (view === 'map') {
+                    document.getElementById('map-container').classList.remove('hidden');
+                    document.getElementById('list-container').classList.remove('active');
+                    // Invalidate map size after showing
+                    setTimeout(() => map.invalidateSize(), 100);
+                } else {
+                    document.getElementById('map-container').classList.add('hidden');
+                    document.getElementById('list-container').classList.add('active');
+                }
+            });
+        });
+
+        // Close detail panel
+        document.getElementById('detail-close').addEventListener('click', () => {
+            document.getElementById('detail-panel').classList.remove('active');
+        });
+
+        // Filter change handlers
+        document.getElementById('member-filter').addEventListener('change', () => {
+            renderMarkers();
+            renderList();
+        });
+        document.getElementById('area-filter').addEventListener('change', () => {
+            renderMarkers();
+            renderList();
+        });
+
+        // Initialize
+        initMap();
+        loadData();
+    </script>
+</body>
+</html>
