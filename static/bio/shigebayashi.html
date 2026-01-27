@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>Shigebayashi - 糞取山酷会</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Shigebayashi - Captain of Kusotori Sankoku Kai" />
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --main-bg-color: #006D4D;
+            --main-font-color: #DE6A1C;
+            --title-color: #1cde33;
+            --link-color: #e39d6e;
+            --link-hover-color: #00ff08;
+            --hr-line-color: #00583f;
+            --selection-bg-color: #F24C3D;
+            --accent-color: #ff58d0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--main-bg-color);
+            color: var(--main-font-color);
+            font-family: "VT323", monospace;
+            margin: 0;
+            padding: 0;
+            font-size: 20px;
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            color: #ffffff;
+            background-color: var(--selection-bg-color);
+        }
+
+        /* VHS NOISE EFFECT */
+        .lines {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 300;
+            opacity: 0.1;
+            animation: opacity 8s linear infinite;
+        }
+
+        .lines:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.387) 51%);
+            background-size: 100% 3px;
+            animation: scanlines 0.5s linear infinite;
+        }
+
+        @keyframes opacity {
+            0% { opacity: 0.3; }
+            20% { opacity: 0.15; }
+            35% { opacity: 0.25; }
+            50% { opacity: 0.4; }
+            60% { opacity: 0.2; }
+            80% { opacity: 0.35; }
+            100% { opacity: 0.3; }
+        }
+
+        @keyframes scanlines {
+            from {
+                background: linear-gradient(to bottom, transparent 50%, rgba(255, 255, 255, 0.387) 51%);
+                background-size: 100% 3px;
+            }
+            to {
+                background: linear-gradient(to bottom, rgba(255, 255, 255, 0.39) 50%, transparent 51%);
+                background-size: 100% 3px;
+            }
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: glitch 3s infinite;
+        }
+
+        .member-name {
+            font-size: 4rem;
+            color: var(--title-color);
+            text-shadow:
+                2px 2px 0 rgba(251, 0, 231, 0.8),
+                -2px -2px 0 rgba(0, 233, 235, 0.8);
+            margin: 0;
+            letter-spacing: 0.1em;
+        }
+
+        .member-role {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin: 0.5rem 0;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49%, 100% { opacity: 1; }
+            50%, 99% { opacity: 0.4; }
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% {
+                transform: translate(0);
+            }
+            92% {
+                transform: translate(-2px, 2px);
+            }
+            94% {
+                transform: translate(2px, -2px);
+            }
+            96% {
+                transform: translate(-2px, -2px);
+            }
+        }
+
+        /* BACK LINK */
+        .back-link {
+            color: var(--link-color);
+            text-decoration: none;
+            border: 2px solid var(--link-color);
+            padding: 0.5rem 1rem;
+            display: inline-block;
+            margin-bottom: 2rem;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .back-link:hover {
+            color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+            box-shadow: 0 0 10px var(--link-hover-color);
+        }
+
+        /* PROFILE CARD */
+        .profile-card {
+            border: 3px solid var(--hr-line-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .profile-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.03) 0px,
+                rgba(255, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .profile-image-container {
+            flex: 0 0 300px;
+            position: relative;
+        }
+
+        .profile-image {
+            width: 100%;
+            height: 300px;
+            background: var(--hr-line-color);
+            border: 2px solid var(--title-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-image::after {
+            content: "📷";
+            filter: hue-rotate(120deg) brightness(0.8);
+        }
+
+        /* 画像が追加された場合 */
+        .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-stats {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .stat-item {
+            margin-bottom: 1.5rem;
+            border-left: 3px solid var(--title-color);
+            padding-left: 1rem;
+        }
+
+        .stat-label {
+            color: var(--link-color);
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            color: var(--title-color);
+            font-size: 1.5rem;
+            display: block;
+        }
+
+        /* GEAR LIST */
+        .gear-list {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .gear-list li {
+            color: var(--title-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .gear-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        /* STATUS BANNER */
+        .status-banner {
+            background: rgba(255, 88, 208, 0.2);
+            border: 2px dashed var(--accent-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-banner .icon {
+            font-size: 2rem;
+            margin: 0 0.5rem;
+        }
+
+        /* SNS LINKS */
+        .sns-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .sns-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--link-color);
+            text-decoration: none;
+            border: 2px solid var(--hr-line-color);
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .sns-link:hover {
+            color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 8, 0.3);
+        }
+
+        .sns-link i {
+            font-size: 1.5rem;
+        }
+
+        .sns-link.instagram:hover {
+            border-color: #E4405F;
+            color: #E4405F;
+            box-shadow: 0 5px 15px rgba(228, 64, 95, 0.3);
+        }
+
+        /* BIO SECTION */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            color: var(--title-color);
+            font-size: 2rem;
+            border-bottom: 2px solid var(--hr-line-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .section-title::before {
+            content: ">";
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        .section-content {
+            line-height: 1.8;
+            font-size: 1.2rem;
+        }
+
+        /* RESPONSIVE */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .member-name {
+                font-size: 2.5rem;
+            }
+
+            .member-role {
+                font-size: 1.5rem;
+            }
+
+            .profile-header {
+                flex-direction: column;
+            }
+
+            .profile-image-container {
+                flex: 1;
+                max-width: 100%;
+            }
+
+            .sns-links {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- BACKGROUND LINE NOISE -->
+    <div class="lines"></div>
+
+    <div class="container">
+        <!-- BACK LINK -->
+        <a href="/" class="back-link">← BACK TO HOME</a>
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1 class="member-name">SHIGEBAYASHI</h1>
+            <div class="member-role">⛰️ CAPTAIN (CL) ⛰️</div>
+        </div>
+
+        <!-- PROFILE CARD -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <!-- PROFILE IMAGE PLACEHOLDER -->
+                <div class="profile-image-container">
+                    <div class="profile-image">
+                        <!-- 画像を追加する場合はここにimgタグを追加 -->
+                        <!-- <img src="img/shigebayashi.jpg" alt="Shigebayashi"> -->
+                    </div>
+                </div>
+
+                <!-- STATS -->
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">JOINED:</span>
+                        <span class="stat-value">2022</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-label">GEAR:</span>
+                        <ul class="gear-list">
+                            <li>Arc'teryx Alpha SV Jacket</li>
+                            <li>Black Diamond Raven Ice Axe</li>
+                            <li>Scarpa Mont Blanc Pro GTX</li>
+                            <li>Petzl Summit Evo Helmet</li>
+                        </ul>
+                    </div>
+
+                    <!-- SNS LINKS -->
+                    <div class="sns-links">
+                        <a href="https://instagram.com/shigebayashi" target="_blank" rel="noopener noreferrer" class="sns-link instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                            <span>Instagram</span>
+                        </a>
+                        <!-- 他のSNSを追加する場合 -->
+                        <!--
+                        <a href="https://twitter.com/shigebayashi" target="_blank" rel="noopener noreferrer" class="sns-link">
+                            <i class="fa-brands fa-twitter"></i>
+                            <span>Twitter</span>
+                        </a>
+                        -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATUS BANNER -->
+            <div class="status-banner">
+                <span class="icon">⚠️</span>
+                <strong>CURRENT STATUS:</strong> Recovering from MCL injury
+                <span class="icon">🏔️⛷️</span>
+            </div>
+        </div>
+
+        <!-- BIO SECTION -->
+        <div class="section">
+            <h2 class="section-title">BIO</h2>
+            <div class="section-content">
+                Shigebayashi is the founding captain of Kusotori Sankoku Kai, bringing over 15 years of mountaineering experience to the team. Known for his exceptional leadership and deep knowledge of mountain safety, he has led countless expeditions across Japan's most challenging peaks.
+                <br><br>
+                As a certified mountain rescue specialist, Shigebayashi prioritizes safety while encouraging team members to push their limits. His calm demeanor and quick decision-making have earned him the respect and trust of all team members.
+                <br><br>
+                Currently recovering from an MCL injury sustained during a skiing expedition, he continues to support the team through planning and mentorship.
+            </div>
+        </div>
+
+        <!-- BACK LINK BOTTOM -->
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="/" class="back-link">← BACK TO HOME</a>
+        </div>
+    </div>
+</body>
+</html>

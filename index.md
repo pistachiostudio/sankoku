@@ -28,7 +28,7 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 - momo
 - Ono
 - PARKGOLF
-- Ryu Wakimoto (Support Rider)
+- [Ryu Wakimoto (Support Rider)](bio/ryu_wakimoto.html)
 - Sasadesune
 - Shigebayashi (CL)
 - Woupa
