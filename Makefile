@@ -7,6 +7,18 @@ setup: clean
 	tar -xvf vss_linux_amd64.tar.gz
 	chmod +x vss
 
+# for macOS (Apple Silicon)
+setup-mac: clean
+	curl -OL https://github.com/vssio/go-vss/releases/latest/download/vss_darwin_arm64.tar.gz
+	tar -xvf vss_darwin_arm64.tar.gz
+	chmod +x vss
+
+# for macOS (Intel)
+setup-mac-intel: clean
+	curl -OL https://github.com/vssio/go-vss/releases/latest/download/vss_darwin_amd64.tar.gz
+	tar -xvf vss_darwin_amd64.tar.gz
+	chmod +x vss
+
 setup-win: clean
 	curl -OL https://github.com/vssio/go-vss/releases/latest/download/vss_windows_amd64.zip
 	unzip vss_windows_amd64.zip

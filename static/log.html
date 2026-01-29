@@ -471,6 +471,116 @@
             border: 1px dashed var(--hr-line-color);
         }
 
+        /* FIT Badge */
+        .fit-badge {
+            display: inline-block;
+            background: #00a8ff;
+            color: var(--main-bg-color);
+            padding: 0.1rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            margin-bottom: 1rem;
+        }
+
+        .chart-section-label {
+            font-size: 0.85rem;
+            color: var(--link-color);
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Chart Toggles (Retro checkbox style) */
+        .chart-toggles {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.8rem;
+            padding: 0.5rem;
+            border-top: 1px solid var(--hr-line-color);
+            flex-wrap: wrap;
+        }
+
+        .chart-toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .chart-toggle-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--hr-line-color);
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .chart-toggle-item input[type="checkbox"]:checked {
+            border-color: var(--title-color);
+            background: var(--title-color);
+        }
+
+        .chart-toggle-item input[type="checkbox"]:checked::after {
+            content: "X";
+            position: absolute;
+            top: -2px;
+            left: 1px;
+            color: var(--main-bg-color);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .chart-toggle-label {
+            font-size: 0.9rem;
+            color: var(--link-color);
+            cursor: pointer;
+        }
+
+        .chart-toggle-label.pace { color: #3b82f6; }
+        .chart-toggle-label.hr { color: #ef4444; }
+        .chart-toggle-label.cadence { color: #d946ef; }
+
+        .chart-toggle-value {
+            font-size: 0.9rem;
+            color: var(--title-color);
+            margin-left: 0.2rem;
+        }
+
+        .chart-toggle-unit {
+            font-size: 0.75rem;
+            color: var(--main-font-color);
+        }
+
+        /* Stat box color variants */
+        .gpx-stat-box.hr {
+            border-color: #F24C3D;
+        }
+
+        .gpx-stat-box.hr .gpx-stat-value {
+            color: #F24C3D;
+        }
+
+        .gpx-stat-box.pace {
+            border-color: #1cde33;
+        }
+
+        .gpx-stat-box.pace .gpx-stat-value {
+            color: #1cde33;
+        }
+
+        .gpx-stat-box.cadence {
+            border-color: #00a8ff;
+        }
+
+        .gpx-stat-box.cadence .gpx-stat-value {
+            color: #00a8ff;
+        }
+
         /* Custom Leaflet Popup */
         .leaflet-popup-content-wrapper {
             background: var(--main-bg-color);
@@ -634,6 +744,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FIT Decoder -->
+    <script src="https://cdn.jsdelivr.net/npm/fit-decoder@1.0.5/dist/index.js"></script>
 
     <script>
         // ============================================
@@ -770,14 +882,16 @@
 
             listEl.innerHTML = sorted.map(log => {
                 const gpxBadge = log.gpx ? '<span class="gpx-badge">GPX</span>' : '';
+                const fitBadge = log.fit ? '<span class="fit-badge">FIT</span>' : '';
+                const trackBadge = fitBadge || gpxBadge;
                 const membersHtml = log.members.map(m => `<span class="member-tag">${m}</span>`).join('');
 
                 return `
                     <li class="climb-item" id="item-${log.id}">
                         <div class="climb-item-header" onclick="toggleDetail('${log.id}')">
                             <div class="climb-item-title">
-                                <span class="climb-mountain">${log.mountain} ${gpxBadge}</span>
-                                <span class="climb-altitude">${log.altitude}m</span>
+                                <span class="climb-mountain">${log.mountain} ${trackBadge}</span>
+                                <span class="climb-altitude">${log.altitude ? log.altitude + 'm' : ''}</span>
                                 <span class="climb-date">${log.date}</span>
                             </div>
                             <span class="expand-icon">▶</span>
@@ -802,8 +916,8 @@
                                 </div>
                             </div>
                             <div class="gpx-section" id="gpx-section-${log.id}">
-                                ${log.gpx ? `
-                                    <div class="loading-gpx" id="loading-${log.id}">Loading GPX data...</div>
+                                ${(log.gpx || log.fit) ? `
+                                    <div class="loading-gpx" id="loading-${log.id}">Loading track data...</div>
                                     <div id="gpx-content-${log.id}" style="display: none;">
                                         <div class="gpx-map-container" id="gpx-map-${log.id}"></div>
                                         <div class="gpx-stats-grid">
@@ -827,10 +941,30 @@
                                                 <div class="gpx-stat-value" id="stat-duration-${log.id}">-</div>
                                                 <div class="gpx-stat-unit"></div>
                                             </div>
+                                            <div class="gpx-stat-box pace" id="stat-pace-box-${log.id}" style="display: none;">
+                                                <div class="gpx-stat-label">AVG PACE</div>
+                                                <div class="gpx-stat-value" id="stat-avg-pace-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">min/km</div>
+                                            </div>
+                                            <div class="gpx-stat-box hr" id="stat-hr-box-${log.id}" style="display: none;">
+                                                <div class="gpx-stat-label">AVG HR</div>
+                                                <div class="gpx-stat-value" id="stat-avg-hr-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">bpm</div>
+                                            </div>
+                                            <div class="gpx-stat-box hr" id="stat-max-hr-box-${log.id}" style="display: none;">
+                                                <div class="gpx-stat-label">MAX HR</div>
+                                                <div class="gpx-stat-value" id="stat-max-hr-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">bpm</div>
+                                            </div>
+                                            <div class="gpx-stat-box cadence" id="stat-cadence-box-${log.id}" style="display: none;">
+                                                <div class="gpx-stat-label">AVG CADENCE</div>
+                                                <div class="gpx-stat-value" id="stat-avg-cadence-${log.id}">-</div>
+                                                <div class="gpx-stat-unit">spm</div>
+                                            </div>
                                         </div>
                                         <div class="chart-container">
                                             <div class="chart-header">
-                                                <div class="chart-title">ELEVATION PROFILE</div>
+                                                <h4 class="chart-title">METRICS</h4>
                                                 <div class="playback-controls">
                                                     <select class="speed-select" id="speed-${log.id}">
                                                         <option value="50">x4</option>
@@ -841,18 +975,50 @@
                                                     <button class="play-btn" id="play-${log.id}" onclick="togglePlayback('${log.id}')">▶ PLAY</button>
                                                 </div>
                                             </div>
-                                            <div class="chart-wrapper">
-                                                <canvas id="chart-${log.id}"></canvas>
+                                            <div class="chart-section">
+                                                <div class="chart-section-label">ELEVATION</div>
+                                                <div class="chart-wrapper" style="height: 100px;">
+                                                    <canvas id="elev-chart-${log.id}"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="chart-section" id="metrics-chart-wrapper-${log.id}" style="display: none;">
+                                                <div class="chart-section-label">METRICS</div>
+                                                <div class="chart-wrapper" style="height: 150px;">
+                                                    <canvas id="chart-${log.id}"></canvas>
+                                                </div>
+                                                <div class="chart-toggles" id="chart-toggles-${log.id}">
+                                                    <div class="chart-toggle-item" id="toggle-pace-${log.id}" style="display: none;">
+                                                        <input type="checkbox" id="chk-pace-${log.id}" checked onchange="toggleMetric('${log.id}', 'pace', this.checked)">
+                                                        <label class="chart-toggle-label pace" for="chk-pace-${log.id}">PACE</label>
+                                                        <span class="chart-toggle-value" id="toggle-pace-val-${log.id}">-</span>
+                                                        <span class="chart-toggle-unit">/km</span>
+                                                    </div>
+                                                    <div class="chart-toggle-item" id="toggle-hr-${log.id}" style="display: none;">
+                                                        <input type="checkbox" id="chk-hr-${log.id}" checked onchange="toggleMetric('${log.id}', 'heartrate', this.checked)">
+                                                        <label class="chart-toggle-label hr" for="chk-hr-${log.id}">HR</label>
+                                                        <span class="chart-toggle-value" id="toggle-hr-val-${log.id}">-</span>
+                                                        <span class="chart-toggle-unit">bpm</span>
+                                                    </div>
+                                                    <div class="chart-toggle-item" id="toggle-cadence-${log.id}" style="display: none;">
+                                                        <input type="checkbox" id="chk-cadence-${log.id}" checked onchange="toggleMetric('${log.id}', 'cadence', this.checked)">
+                                                        <label class="chart-toggle-label cadence" for="chk-cadence-${log.id}">CADENCE</label>
+                                                        <span class="chart-toggle-value" id="toggle-cadence-val-${log.id}">-</span>
+                                                        <span class="chart-toggle-unit">spm</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="position-info" id="position-${log.id}">
                                                 <div><span>Distance:</span> <strong id="info-dist-${log.id}">-</strong></div>
                                                 <div><span>Elevation:</span> <strong id="info-elev-${log.id}">-</strong></div>
+                                                <div id="info-pace-row-${log.id}" style="display: none;"><span>Pace:</span> <strong id="info-pace-${log.id}">-</strong></div>
+                                                <div id="info-hr-row-${log.id}" style="display: none;"><span>Heart Rate:</span> <strong id="info-hr-${log.id}">-</strong></div>
+                                                <div id="info-cadence-row-${log.id}" style="display: none;"><span>Cadence:</span> <strong id="info-cadence-${log.id}">-</strong></div>
                                                 <div><span>Time:</span> <strong id="info-time-${log.id}">-</strong></div>
                                                 <div><span>Elapsed:</span> <strong id="info-elapsed-${log.id}">-</strong></div>
                                             </div>
                                         </div>
                                     </div>
-                                ` : '<div class="no-gpx">No GPX data available</div>'}
+                                ` : '<div class="no-gpx">No track data available</div>'}
                             </div>
                         </div>
                     </li>
@@ -882,10 +1048,10 @@
             } else {
                 item.classList.add('expanded');
 
-                // Load GPX if available and not already loaded
+                // Load track data (GPX or FIT) if available and not already loaded
                 const log = logsData.find(l => l.id === logId);
-                if (log && log.gpx && !gpxData[logId]) {
-                    loadGPX(logId, log.gpx);
+                if (log && (log.gpx || log.fit) && !gpxData[logId]) {
+                    loadTrackData(logId, log);
                 } else if (gpxMaps[logId]) {
                     // Invalidate map size when re-opening
                     setTimeout(() => gpxMaps[logId].invalidateSize(), 100);
@@ -1024,6 +1190,309 @@
             return `${hours}h ${minutes}m`;
         }
 
+        function formatPace(minPerKm) {
+            if (!minPerKm || !isFinite(minPerKm) || minPerKm <= 0 || minPerKm > 30) return '-';
+            const minutes = Math.floor(minPerKm);
+            const seconds = Math.round((minPerKm - minutes) * 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // FITファイルをパースして共通フォーマットに変換
+        async function parseFIT(fitArrayBuffer) {
+            try {
+                // ArrayBufferをUint8Arrayに変換（fit-decoderの要件）
+                const buffer = new Uint8Array(fitArrayBuffer).buffer;
+
+                // fit-decoder を使用してFITをパース
+                const jsonRaw = fitDecoder.fit2json(buffer);
+                const parsed = fitDecoder.parseRecords(jsonRaw);
+
+                // fit-decoderはオブジェクトを返す: { records: [{type, data}, ...], ... }
+                // sessionレコードから集計データを取得（COROS/Stravaと同じ値になる）
+                const sessionRecord = parsed.records.find(item => item.type === 'session');
+                const sessionData = sessionRecord ? sessionRecord.data : null;
+
+                // type === 'record' のエントリからデータを抽出
+                // GPS異常値をフィルタリング（Stravaライクな処理）
+                let records = [];
+                if (parsed && parsed.records && Array.isArray(parsed.records)) {
+                    // Step 1: 基本的なフィルタリング（座標範囲外を除外）
+                    const validRecords = parsed.records
+                        .filter(item => {
+                            if (item.type !== 'record') return false;
+                            const d = item.data;
+                            if (!d.position_lat || !d.position_long) return false;
+                            // 異常な座標値を除外（GPS取得失敗時は179.99...になることがある）
+                            if (d.position_lat > 90 || d.position_lat < -90) return false;
+                            if (d.position_long > 180 || d.position_long < -180) return false;
+                            return true;
+                        })
+                        .map(item => item.data);
+
+                    // Step 2: 急激な位置飛び（スパイク）を検出・除外
+                    // 2点間の距離を計算するヘルパー関数
+                    const haversineDistance = (lat1, lon1, lat2, lon2) => {
+                        const R = 6371000; // 地球の半径（メートル）
+                        const dLat = (lat2 - lat1) * Math.PI / 180;
+                        const dLon = (lon2 - lon1) * Math.PI / 180;
+                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                                  Math.sin(dLon/2) * Math.sin(dLon/2);
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                        return R * c;
+                    };
+
+                    // スパイク検出: 前後の点から急激に離れている点を除外
+                    records = validRecords.filter((record, index, arr) => {
+                        if (index === 0 || index === arr.length - 1) return true;
+
+                        const prev = arr[index - 1];
+                        const next = arr[index + 1];
+                        const curr = record;
+
+                        // 時間差を計算（秒）
+                        const timePrev = prev.timestamp ? new Date(prev.timestamp) : null;
+                        const timeCurr = curr.timestamp ? new Date(curr.timestamp) : null;
+                        const timeNext = next.timestamp ? new Date(next.timestamp) : null;
+
+                        if (!timePrev || !timeCurr || !timeNext) return true;
+
+                        const dtPrev = (timeCurr - timePrev) / 1000;
+                        const dtNext = (timeNext - timeCurr) / 1000;
+
+                        if (dtPrev <= 0 || dtNext <= 0) return true;
+
+                        // 距離を計算
+                        const distPrev = haversineDistance(prev.position_lat, prev.position_long, curr.position_lat, curr.position_long);
+                        const distNext = haversineDistance(curr.position_lat, curr.position_long, next.position_lat, next.position_long);
+                        const distDirect = haversineDistance(prev.position_lat, prev.position_long, next.position_lat, next.position_long);
+
+                        // 速度を計算（m/s）
+                        const speedPrev = distPrev / dtPrev;
+                        const speedNext = distNext / dtNext;
+
+                        // 非現実的な速度（50m/s = 180km/h以上）を検出
+                        const maxRealisticSpeed = 50;
+                        if (speedPrev > maxRealisticSpeed || speedNext > maxRealisticSpeed) {
+                            // さらに確認：前後を直接つないだ距離が短ければスパイク
+                            const directSpeed = distDirect / (dtPrev + dtNext);
+                            if (directSpeed < maxRealisticSpeed * 0.5) {
+                                return false; // スパイクとして除外
+                            }
+                        }
+
+                        return true;
+                    });
+                }
+
+                const points = [];
+                let totalElevationGain = 0;
+                let maxElevation = -Infinity;
+                let minElevation = Infinity;
+                let startTime = null;
+                let endTime = null;
+                let prevEle = null;
+                let totalHeartRate = 0;
+                let heartRateCount = 0;
+                let maxHeartRate = 0;
+                let totalCadence = 0;
+                let cadenceCount = 0;
+                let totalSpeed = 0;
+                let speedCount = 0;
+
+                // Step 3: 標高スパイク除去（前の値との差が大きすぎる場合は前の値を使用）
+                let lastValidEle = null;
+
+                records.forEach((record, index) => {
+                    const lat = record.position_lat;
+                    const lon = record.position_long;
+
+                    // 標高: 前の値との差が100m以上ならスパイクとして除外
+                    let ele = record.altitude || record.enhanced_altitude || 0;
+                    if (lastValidEle !== null && Math.abs(ele - lastValidEle) > 100) {
+                        ele = lastValidEle; // スパイクは前の値で置換
+                    } else {
+                        lastValidEle = ele;
+                    }
+
+                    const time = record.timestamp ? new Date(record.timestamp) : null;
+                    // fit-decoderは距離をメートルに変換済み
+                    const distance = (record.distance || 0) / 1000; // メートルからkmに変換
+
+                    // 心拍数: 異常値フィルタ（30-220の範囲外は除外）
+                    let heartRate = record.heart_rate || null;
+                    if (heartRate && (heartRate < 30 || heartRate > 220)) {
+                        heartRate = null;
+                    }
+
+                    const cadence = record.cadence ? record.cadence * 2 : null; // ランニングは片足なので2倍
+                    // fit-decoderは速度をm/sに変換済み
+                    const speedMs = record.speed || record.enhanced_speed || null;
+                    const speed = speedMs ? speedMs * 3.6 : null; // m/s -> km/h
+
+                    if (index === 0 && time) startTime = time;
+                    if (time) endTime = time;
+
+                    if (ele > maxElevation) maxElevation = ele;
+                    if (ele < minElevation) minElevation = ele;
+
+                    // 獲得標高計算: ノイズ対策で2m以上の上昇のみカウント
+                    if (prevEle !== null) {
+                        const elevDiff = ele - prevEle;
+                        if (elevDiff > 2) {
+                            totalElevationGain += elevDiff;
+                        }
+                    }
+                    prevEle = ele;
+
+                    if (heartRate) {
+                        totalHeartRate += heartRate;
+                        heartRateCount++;
+                        if (heartRate > maxHeartRate) maxHeartRate = heartRate;
+                    }
+
+                    if (cadence) {
+                        totalCadence += cadence;
+                        cadenceCount++;
+                    }
+
+                    if (speed && speed > 0) {
+                        totalSpeed += speed;
+                        speedCount++;
+                    }
+
+                    points.push({
+                        lat,
+                        lon,
+                        ele,
+                        time,
+                        distance,
+                        heartRate,
+                        cadence,
+                        speed,
+                        pace: speed && speed > 0 ? 60 / speed : null // min/km
+                    });
+                });
+
+                const lastDistance = points.length > 0 ? points[points.length - 1].distance : 0;
+                const durationSeconds = startTime && endTime ? (endTime - startTime) / 1000 : 0;
+
+                // sessionレコードから統計を取得（COROS/Stravaと同じ値）
+                // avg_speedはm/s単位、ペース(min/km) = 60 / (speed * 3.6)
+                const sessionAvgPace = sessionData && sessionData.avg_speed > 0
+                    ? 60 / (sessionData.avg_speed * 3.6)
+                    : null;
+
+                return {
+                    points,
+                    stats: {
+                        distance: lastDistance,
+                        elevationGain: totalElevationGain,
+                        maxElevation,
+                        minElevation,
+                        startTime,
+                        endTime,
+                        duration: durationSeconds,
+                        avgHeartRate: sessionData?.avg_heart_rate || (heartRateCount > 0 ? Math.round(totalHeartRate / heartRateCount) : null),
+                        maxHeartRate: sessionData?.max_heart_rate || (maxHeartRate > 0 ? maxHeartRate : null),
+                        avgCadence: sessionData?.avg_cadence ? sessionData.avg_cadence * 2 : (cadenceCount > 0 ? Math.round(totalCadence / cadenceCount) : null),
+                        avgPace: sessionAvgPace
+                    },
+                    hasHeartRate: heartRateCount > 0,
+                    hasCadence: cadenceCount > 0,
+                    hasSpeed: speedCount > 0
+                };
+            } catch (error) {
+                console.error('FIT parse error:', error);
+                throw error;
+            }
+        }
+
+        // GPXまたはFITを読み込む統合関数
+        async function loadTrackData(logId, log) {
+            try {
+                let trackData;
+
+                if (log.fit) {
+                    // FITファイルを読み込み
+                    const response = await fetch(`data/logs/${log.fit}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    trackData = await parseFIT(arrayBuffer);
+                } else if (log.gpx) {
+                    // GPXファイルを読み込み（既存のparseGPX関数を使用）
+                    const response = await fetch(`data/logs/${log.gpx}`);
+                    const gpxText = await response.text();
+                    trackData = parseGPX(gpxText);
+                    trackData.hasHeartRate = false;
+                    trackData.hasCadence = false;
+                    trackData.hasSpeed = false;
+                }
+
+                if (!trackData) return;
+
+                gpxData[logId] = trackData;
+
+                // Hide loading, show content
+                document.getElementById(`loading-${logId}`).style.display = 'none';
+                document.getElementById(`gpx-content-${logId}`).style.display = 'block';
+
+                // Initialize GPX map (FITの場合は黄緑色、プライバシーゾーン適用)
+                initGPXMap(logId, trackData, !!log.fit);
+
+                // Update basic stats
+                document.getElementById(`stat-distance-${logId}`).textContent = trackData.stats.distance.toFixed(1);
+                document.getElementById(`stat-gain-${logId}`).textContent = Math.round(trackData.stats.elevationGain);
+                document.getElementById(`stat-max-${logId}`).textContent = Math.round(trackData.stats.maxElevation);
+                document.getElementById(`stat-duration-${logId}`).textContent = formatDuration(trackData.stats.duration);
+
+                // Show FIT-specific stats and enable toggles if available
+                if (trackData.hasSpeed && trackData.stats.avgPace) {
+                    document.getElementById(`stat-pace-box-${logId}`).style.display = 'block';
+                    document.getElementById(`stat-avg-pace-${logId}`).textContent = formatPace(trackData.stats.avgPace);
+                    document.getElementById(`toggle-pace-${logId}`).style.display = 'flex';
+                    document.getElementById(`toggle-pace-val-${logId}`).textContent = formatPace(trackData.stats.avgPace);
+                    document.getElementById(`info-pace-row-${logId}`).style.display = 'block';
+                }
+
+                if (trackData.hasHeartRate) {
+                    document.getElementById(`stat-hr-box-${logId}`).style.display = 'block';
+                    document.getElementById(`stat-avg-hr-${logId}`).textContent = trackData.stats.avgHeartRate;
+                    document.getElementById(`stat-max-hr-box-${logId}`).style.display = 'block';
+                    document.getElementById(`stat-max-hr-${logId}`).textContent = trackData.stats.maxHeartRate;
+                    document.getElementById(`toggle-hr-${logId}`).style.display = 'flex';
+                    document.getElementById(`toggle-hr-val-${logId}`).textContent = trackData.stats.avgHeartRate;
+                    document.getElementById(`info-hr-row-${logId}`).style.display = 'block';
+                }
+
+                if (trackData.hasCadence) {
+                    document.getElementById(`stat-cadence-box-${logId}`).style.display = 'block';
+                    document.getElementById(`stat-avg-cadence-${logId}`).textContent = trackData.stats.avgCadence;
+                    document.getElementById(`toggle-cadence-${logId}`).style.display = 'flex';
+                    document.getElementById(`toggle-cadence-val-${logId}`).textContent = trackData.stats.avgCadence;
+                    document.getElementById(`info-cadence-row-${logId}`).style.display = 'block';
+                }
+
+                // Sample points once for both charts (ensures alignment)
+                const sampleRate = Math.max(1, Math.floor(trackData.points.length / 200));
+                const sampledPoints = trackData.points.filter((_, i) => i % sampleRate === 0);
+                playbackStates[logId].sampledPoints = sampledPoints;
+
+                // Draw elevation chart (always shown)
+                drawElevationChart(logId, sampledPoints);
+
+                // Draw metrics chart if FIT data has metrics
+                const hasMetrics = trackData.hasSpeed || trackData.hasHeartRate || trackData.hasCadence;
+                if (hasMetrics) {
+                    document.getElementById(`metrics-chart-wrapper-${logId}`).style.display = 'block';
+                    drawMetricsChart(logId, sampledPoints, trackData);
+                }
+
+            } catch (error) {
+                console.error('Failed to load track data:', error);
+                document.getElementById(`loading-${logId}`).textContent = 'Failed to load track data';
+            }
+        }
+
         async function loadGPX(logId, gpxFile) {
             try {
                 const response = await fetch(`data/logs/${gpxFile}`);
@@ -1045,8 +1514,11 @@
                 document.getElementById(`stat-max-${logId}`).textContent = Math.round(trackData.stats.maxElevation);
                 document.getElementById(`stat-duration-${logId}`).textContent = formatDuration(trackData.stats.duration);
 
-                // Draw elevation chart
-                drawElevationChart(logId, trackData.points);
+                // Sample points and draw elevation chart
+                const sampleRate = Math.max(1, Math.floor(trackData.points.length / 200));
+                const sampledPoints = trackData.points.filter((_, i) => i % sampleRate === 0);
+                playbackStates[logId].sampledPoints = sampledPoints;
+                drawElevationChart(logId, sampledPoints);
 
             } catch (error) {
                 console.error('Failed to load GPX:', error);
@@ -1054,7 +1526,7 @@
             }
         }
 
-        function initGPXMap(logId, trackData) {
+        function initGPXMap(logId, trackData, isFit = false) {
             const mapContainer = document.getElementById(`gpx-map-${logId}`);
             const gpxMap = L.map(mapContainer).setView([36.5, 138.5], 6);
 
@@ -1071,31 +1543,43 @@
             gsiLayer.addTo(gpxMap);
             L.control.layers({ '地理院地図': gsiLayer, 'OpenTopoMap': topoLayer }).addTo(gpxMap);
 
-            // Draw track
-            const latlngs = trackData.points.map(p => [p.lat, p.lon]);
+            // FITの場合: start/goal付近200mを非表示（プライバシー保護）
+            let latlngs = trackData.points.map(p => [p.lat, p.lon]);
+            if (isFit && trackData.points.length > 0) {
+                const totalDist = trackData.points[trackData.points.length - 1].distance;
+                const privacyZone = 0.2; // 200m = 0.2km
+                latlngs = trackData.points
+                    .filter(p => p.distance > privacyZone && p.distance < totalDist - privacyZone)
+                    .map(p => [p.lat, p.lon]);
+            }
+
+            // Draw track (FITは黄緑、GPXはオレンジ)
+            const trackColor = isFit ? '#1cde33' : '#DE6A1C';
             const trackLayer = L.polyline(latlngs, {
-                color: '#DE6A1C',
+                color: trackColor,
                 weight: 4,
                 opacity: 0.9
             }).addTo(gpxMap);
 
-            // Start/End markers
-            const startIcon = L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="width:18px;height:18px;background:#1cde33;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#006D4D;font-family:VT323;font-size:11px;font-weight:bold;">S</div>`,
-                iconSize: [18, 18],
-                iconAnchor: [9, 9]
-            });
+            // Start/End markers (表示位置はプライバシーゾーン適用後の軌跡端点)
+            if (latlngs.length > 0) {
+                const startIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="width:18px;height:18px;background:#1cde33;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#006D4D;font-family:VT323;font-size:11px;font-weight:bold;">S</div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
+                });
 
-            const endIcon = L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="width:18px;height:18px;background:#F24C3D;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:VT323;font-size:11px;font-weight:bold;">G</div>`,
-                iconSize: [18, 18],
-                iconAnchor: [9, 9]
-            });
+                const endIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="width:18px;height:18px;background:#F24C3D;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:VT323;font-size:11px;font-weight:bold;">G</div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
+                });
 
-            L.marker(latlngs[0], { icon: startIcon }).addTo(gpxMap);
-            L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(gpxMap);
+                L.marker(latlngs[0], { icon: startIcon }).addTo(gpxMap);
+                L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(gpxMap);
+            }
 
             // Position marker for playback
             const positionIcon = L.divIcon({
@@ -1113,36 +1597,200 @@
                 positionMarker,
                 isPlaying: false,
                 index: 0,
-                interval: null
+                interval: null,
+                currentIndex: -1
             };
         }
 
-        function drawElevationChart(logId, points) {
-            const ctx = document.getElementById(`chart-${logId}`).getContext('2d');
+        // 標高グラフ（常時表示、シンプル）
+        let elevCharts = {};
+        function drawElevationChart(logId, sampledPoints) {
+            const ctx = document.getElementById(`elev-chart-${logId}`).getContext('2d');
 
-            // Sample points
-            const sampleRate = Math.max(1, Math.floor(points.length / 200));
-            const sampledPoints = points.filter((_, i) => i % sampleRate === 0);
-
-            playbackStates[logId].sampledPoints = sampledPoints;
+            if (elevCharts[logId]) {
+                elevCharts[logId].destroy();
+            }
 
             const labels = sampledPoints.map(p => p.distance.toFixed(1));
-            const elevations = sampledPoints.map(p => p.ele);
+            const elevData = sampledPoints.map(p => p.ele);
+            const minElev = Math.min(...elevData);
+            const maxElev = Math.max(...elevData);
+
+            // Vertical line plugin
+            const verticalLinePlugin = {
+                id: 'verticalLineElev',
+                afterDraw: (chart) => {
+                    const state = playbackStates[logId];
+                    if (state && state.currentIndex !== undefined && state.currentIndex >= 0) {
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        const yAxis = chart.scales.y;
+                        const x = xAxis.getPixelForValue(state.currentIndex);
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(x, yAxis.top);
+                        ctx.lineTo(x, yAxis.bottom);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#ffff00';
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+            };
 
             const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-                        data: elevations,
+                        label: 'elevation',
+                        data: elevData,
                         borderColor: '#DE6A1C',
                         backgroundColor: 'rgba(222, 106, 28, 0.3)',
                         fill: true,
-                        tension: 0.1,
+                        tension: 0.2,
                         pointRadius: 0,
-                        borderWidth: 2
+                        borderWidth: 1
                     }]
                 },
+                plugins: [verticalLinePlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 0, right: 30 } },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            display: true,
+                            position: 'left',
+                            min: Math.max(0, minElev - 20),
+                            max: maxElev + 20,
+                            ticks: {
+                                color: '#DE6A1C',
+                                font: { family: 'VT323', size: 10 },
+                                maxTicksLimit: 3,
+                                callback: (val) => val + 'm'
+                            },
+                            grid: { color: 'rgba(0, 88, 63, 0.3)' }
+                        }
+                    },
+                    onHover: (event, elements) => {
+                        if (playbackStates[logId].isPlaying) return;
+                        if (elements.length > 0) {
+                            updatePositionMarker(logId, elements[0].index);
+                        }
+                    }
+                }
+            });
+
+            elevCharts[logId] = chart;
+
+            // Mouse leave handler
+            document.getElementById(`elev-chart-${logId}`).addEventListener('mouseleave', () => {
+                if (!playbackStates[logId].isPlaying) {
+                    const state = playbackStates[logId];
+                    state.currentIndex = -1;
+                    if (elevCharts[logId]) elevCharts[logId].draw();
+                    if (gpxCharts[logId]) gpxCharts[logId].draw();
+                    if (gpxMaps[logId] && gpxMaps[logId].hasLayer(state.positionMarker)) {
+                        gpxMaps[logId].removeLayer(state.positionMarker);
+                    }
+                    document.getElementById(`position-${logId}`).classList.remove('active');
+                }
+            });
+        }
+
+        // メトリクスグラフ（pace/HR/cadence、FIT専用）
+        function drawMetricsChart(logId, sampledPoints, trackData) {
+            const ctx = document.getElementById(`chart-${logId}`).getContext('2d');
+
+            if (gpxCharts[logId]) {
+                gpxCharts[logId].destroy();
+            }
+
+            const labels = sampledPoints.map(p => p.distance.toFixed(1));
+            const datasets = [];
+
+            // ペース（青）
+            if (trackData.hasSpeed) {
+                datasets.push({
+                    label: 'pace',
+                    data: sampledPoints.map(p => p.pace && p.pace > 0 && p.pace < 30 ? p.pace : null),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: 'yPace'
+                });
+            }
+
+            // 心拍数（赤）
+            if (trackData.hasHeartRate) {
+                datasets.push({
+                    label: 'heartrate',
+                    data: sampledPoints.map(p => p.heartRate),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: 'yHeartRate'
+                });
+            }
+
+            // ケイデンス（マゼンタ）
+            if (trackData.hasCadence) {
+                datasets.push({
+                    label: 'cadence',
+                    data: sampledPoints.map(p => p.cadence),
+                    borderColor: '#d946ef',
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: 'yCadence'
+                });
+            }
+
+            // Vertical line plugin
+            const verticalLinePlugin = {
+                id: 'verticalLineMetrics',
+                afterDraw: (chart) => {
+                    const state = playbackStates[logId];
+                    if (state && state.currentIndex !== undefined && state.currentIndex >= 0) {
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        const chartArea = chart.chartArea;
+                        const x = xAxis.getPixelForValue(state.currentIndex);
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(x, chartArea.top);
+                        ctx.lineTo(x, chartArea.bottom);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#ffff00';
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+            };
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                plugins: [verticalLinePlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -1151,13 +1799,42 @@
                     scales: {
                         x: {
                             display: true,
-                            ticks: { color: '#e39d6e', font: { family: 'VT323' }, maxTicksLimit: 6 },
-                            grid: { color: 'rgba(0, 88, 63, 0.5)' }
+                            title: { display: true, text: 'km', color: '#e39d6e', font: { family: 'VT323' } },
+                            ticks: { color: '#e39d6e', font: { family: 'VT323' }, maxTicksLimit: 8 },
+                            grid: { color: 'rgba(0, 88, 63, 0.3)' }
                         },
-                        y: {
-                            display: true,
-                            ticks: { color: '#e39d6e', font: { family: 'VT323' } },
-                            grid: { color: 'rgba(0, 88, 63, 0.5)' }
+                        yPace: {
+                            type: 'linear',
+                            display: trackData.hasSpeed,
+                            position: 'left',
+                            reverse: true,
+                            min: 3,
+                            max: 15,
+                            ticks: {
+                                color: '#3b82f6',
+                                font: { family: 'VT323', size: 11 },
+                                callback: (val) => val + ':00'
+                            },
+                            grid: { display: false }
+                        },
+                        yHeartRate: {
+                            type: 'linear',
+                            display: trackData.hasHeartRate,
+                            position: 'right',
+                            min: 80,
+                            max: 200,
+                            ticks: {
+                                color: '#ef4444',
+                                font: { family: 'VT323', size: 11 }
+                            },
+                            grid: { display: false }
+                        },
+                        yCadence: {
+                            type: 'linear',
+                            display: false,
+                            position: 'right',
+                            min: 100,
+                            max: 200
                         }
                     },
                     onHover: (event, elements) => {
@@ -1175,7 +1852,10 @@
             document.getElementById(`chart-${logId}`).addEventListener('mouseleave', () => {
                 if (!playbackStates[logId].isPlaying) {
                     const state = playbackStates[logId];
-                    if (gpxMaps[logId].hasLayer(state.positionMarker)) {
+                    state.currentIndex = -1;
+                    if (elevCharts[logId]) elevCharts[logId].draw();
+                    if (gpxCharts[logId]) gpxCharts[logId].draw();
+                    if (gpxMaps[logId] && gpxMaps[logId].hasLayer(state.positionMarker)) {
                         gpxMaps[logId].removeLayer(state.positionMarker);
                     }
                     document.getElementById(`position-${logId}`).classList.remove('active');
@@ -1183,10 +1863,35 @@
             });
         }
 
+        // メトリクスの表示/非表示を切り替え
+        function toggleMetric(logId, metric, visible) {
+            const chart = gpxCharts[logId];
+            if (!chart) return;
+
+            const dataset = chart.data.datasets.find(ds => ds.label === metric);
+            if (dataset) {
+                dataset.hidden = !visible;
+                chart.update();
+            }
+
+            if (playbackStates[logId]) {
+                playbackStates[logId].visibleMetrics[metric] = visible;
+            }
+        }
+
         function updatePositionMarker(logId, index) {
             const state = playbackStates[logId];
             const point = state.sampledPoints[index];
             if (!point) return;
+
+            // Update vertical line position on both charts
+            state.currentIndex = index;
+            if (elevCharts[logId]) {
+                elevCharts[logId].draw();
+            }
+            if (gpxCharts[logId]) {
+                gpxCharts[logId].draw();
+            }
 
             state.positionMarker.setLatLng([point.lat, point.lon]);
             if (!gpxMaps[logId].hasLayer(state.positionMarker)) {
@@ -1195,6 +1900,22 @@
 
             document.getElementById(`info-dist-${logId}`).textContent = point.distance.toFixed(2) + ' km';
             document.getElementById(`info-elev-${logId}`).textContent = Math.round(point.ele) + ' m';
+
+            // FIT固有のデータ
+            const paceEl = document.getElementById(`info-pace-${logId}`);
+            if (paceEl) {
+                paceEl.textContent = point.pace ? formatPace(point.pace) + ' /km' : '-';
+            }
+
+            const hrEl = document.getElementById(`info-hr-${logId}`);
+            if (hrEl) {
+                hrEl.textContent = point.heartRate ? point.heartRate + ' bpm' : '-';
+            }
+
+            const cadenceEl = document.getElementById(`info-cadence-${logId}`);
+            if (cadenceEl) {
+                cadenceEl.textContent = point.cadence ? point.cadence + ' spm' : '-';
+            }
 
             if (point.time) {
                 document.getElementById(`info-time-${logId}`).textContent = point.time.toLocaleTimeString('ja-JP');

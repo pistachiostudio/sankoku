@@ -197,6 +197,10 @@ try {
     // GPXファイルの有無を確認
     const hasGpx = fs.existsSync(gpxPath);
 
+    // FITファイルの有無を確認
+    const fitPath = path.join(folderPath, 'track.fit');
+    const hasFit = fs.existsSync(fitPath);
+
     // GPXから位置情報と標高を取得
     let gpxData = { location: null, altitude: null };
     if (hasGpx) {
@@ -212,7 +216,8 @@ try {
       ...data,
       altitude,
       location: gpxData.location,
-      gpx: hasGpx ? `${folder}/track.gpx` : null
+      gpx: hasGpx ? `${folder}/track.gpx` : null,
+      fit: hasFit ? `${folder}/track.fit` : null
     };
   }).filter(log => log !== null);
 
