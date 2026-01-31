@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8" />
-    <title>山行ログ | 糞取山酷会</title>
+    <title>トレーニングログ | 糞取山酷会</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Leaflet CSS -->
@@ -684,7 +684,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>== CLIMB LOG ==</h1>
+            <h1>== TRAINING LOG ==</h1>
             <a href="/" class="back-link">< BACK</a>
         </div>
 
@@ -693,15 +693,11 @@
             <div class="stat-item">
                 <span class="stat-label">Total:</span>
                 <span class="stat-value" id="total-climbs">0</span>
-                <span class="stat-label">climbs</span>
+                <span class="stat-label">sessions</span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Highest:</span>
-                <span class="stat-value" id="highest-peak">-</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Members:</span>
-                <span class="stat-value" id="total-members">0</span>
+                <span class="stat-label">Total Distance:</span>
+                <span class="stat-value" id="total-distance">-</span>
             </div>
         </div>
 
@@ -799,9 +795,9 @@
         // ============================================
         async function loadData() {
             try {
-                const response = await fetch('data/activity_logs.json');
+                const response = await fetch('data/training_logs.json');
                 const data = await response.json();
-                logsData = data.activity_logs;
+                logsData = data.training_logs;
 
                 updateStats();
                 populateFilters();
@@ -818,14 +814,8 @@
         function updateStats() {
             document.getElementById('total-climbs').textContent = logsData.length;
 
-            if (logsData.length > 0) {
-                const highest = logsData.reduce((max, c) => c.altitude > max.altitude ? c : max, logsData[0]);
-                document.getElementById('highest-peak').textContent = `${highest.mountain} (${highest.altitude}m)`;
-            }
-
-            const allMembers = new Set();
-            logsData.forEach(c => c.members.forEach(m => allMembers.add(m)));
-            document.getElementById('total-members').textContent = allMembers.size;
+            // トレーニングでは total distance は FIT データ読み込み後に更新
+            document.getElementById('total-distance').textContent = '-';
         }
 
         // ============================================
@@ -1415,12 +1405,12 @@
 
                 if (log.fit) {
                     // FITファイルを読み込み
-                    const response = await fetch(`data/activity_logs/${log.fit}`);
+                    const response = await fetch(`data/training_logs/${log.fit}`);
                     const arrayBuffer = await response.arrayBuffer();
                     trackData = await parseFIT(arrayBuffer);
                 } else if (log.gpx) {
                     // GPXファイルを読み込み（既存のparseGPX関数を使用）
-                    const response = await fetch(`data/activity_logs/${log.gpx}`);
+                    const response = await fetch(`data/training_logs/${log.gpx}`);
                     const gpxText = await response.text();
                     trackData = parseGPX(gpxText);
                     trackData.hasHeartRate = false;
@@ -1495,7 +1485,7 @@
 
         async function loadGPX(logId, gpxFile) {
             try {
-                const response = await fetch(`data/activity_logs/${gpxFile}`);
+                const response = await fetch(`data/training_logs/${gpxFile}`);
                 const gpxText = await response.text();
                 const trackData = parseGPX(gpxText);
 

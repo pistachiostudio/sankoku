@@ -18,8 +18,9 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 
 ## Contents
 
-[=> Climb](/climb_game)  
-[=> View Logs (Under construction)](/log)
+- [=> Climb](/climb_game)
+- [=> Activity Logs (Under construction)](/log)
+- [=> Training Logs (Under construction)](/training)
 
 ---
 

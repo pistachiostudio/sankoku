@@ -1,0 +1,19 @@
+{
+  "training_logs": [
+    {
+      "id": "20260122_run",
+      "mountain": "Running Asakusa-Ueno",
+      "date": "2026-01-22",
+      "area": "東京",
+      "members": [
+        "Koyama"
+      ],
+      "note": "Running test & .fit sample",
+      "photos": [],
+      "altitude": null,
+      "location": null,
+      "gpx": null,
+      "fit": "20260122_run/track.fit"
+    }
+  ]
+}
