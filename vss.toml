@@ -3,4 +3,4 @@ site_description = "Hardwork Hiking Club"
 base_url = "https://sankoku.club/"
 
 [build]
-ignore_files = ["README.md", "how-to-use.md"]
+ignore_files = ["README.md", "how-to-use.md", "INFO-message.md"]

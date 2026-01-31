@@ -93,59 +93,62 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
         <div class="vhs">
 
             <!-- INFO BANNER -->
-            <div class="info-banner">
-                <span class="info-label">INFO</span>
-                <div class="info-detail">
-                    Next Sankoku : 2/28<br>
-                    Area : TBD
-                </div>
+            <div class="info-banner" id="info-banner" style="display: none;">
+                <span class="info-label" id="info-label">INFO</span>
+                <div class="info-detail" id="info-detail"></div>
             </div>
             <style>
+                /* INFO Banner - Pattern B: Simple with subtle background */
                 .info-banner {
                     position: fixed;
                     top: 20px;
                     left: 0;
                     right: 0;
                     width: 100%;
-                    max-width: 600px;
+                    max-width: 500px;
                     margin: 0 auto;
-                    border: 2px solid #DE6A1C;
+                    border: none;
+                    border-left: 3px solid #DE6A1C;
                     padding: 8px 15px;
                     cursor: pointer;
-                    box-shadow: 0 0 10px rgba(222, 106, 28, 0.5), inset 0 0 5px rgba(222, 106, 28, 0.2);
-                    background: rgba(0, 77, 54, 0.95);
-                    text-align: center;
+                    box-shadow: none;
+                    background: transparent;
+                    text-align: left;
                     z-index: 1000;
                     box-sizing: border-box;
+                    transition: border-color 0.2s ease, background 0.2s ease;
                 }
                 .info-banner:hover {
-                    border-color: #00ff08;
-                    box-shadow: 0 0 10px rgba(0, 255, 8, 0.5), inset 0 0 5px rgba(0, 255, 8, 0.2);
+                    border-left-color: #00ff08;
+                    background: rgba(0, 77, 54, 0.95);
                 }
                 .info-label {
                     font-family: 'VT323', monospace;
                     font-size: 18px;
                     color: #DE6A1C;
                     letter-spacing: 2px;
+                    transition: color 0.2s ease, text-shadow 0.2s ease;
                 }
                 .info-banner:hover .info-label {
                     color: #00ff08;
+                    text-shadow: 0 0 10px rgba(0, 255, 8, 0.5);
                 }
                 .info-detail {
                     display: none;
-                    background: rgba(0, 77, 54, 0.98);
-                    border: 2px solid #DE6A1C;
-                    padding: 10px 15px;
+                    background: transparent;
+                    border: none;
+                    border-left: 1px solid #00583f;
+                    padding: 8px 0 8px 12px;
                     margin-top: 8px;
+                    margin-left: 0;
                     font-family: 'VT323', monospace;
                     font-size: 16px;
                     color: #e39d6e;
-                    box-shadow: 0 0 10px rgba(222, 106, 28, 0.5);
+                    box-shadow: none;
                 }
                 .info-banner:hover .info-detail {
                     display: block;
-                    border-color: #00ff08;
-                    box-shadow: 0 0 10px rgba(0, 255, 8, 0.5);
+                    border-left-color: #00ff08;
                 }
             </style>
 
@@ -217,17 +220,29 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
             </script>
 
             <script>
-            // /static に置いた “currentColor 化済み” のSVGを差し込む
+            // /static に置いた "currentColor 化済み" のSVGを差し込む
             fetch('sankoku-logo-shake.svg')
                 .then(r => r.text())
                 .then(svg => { document.getElementById('logo-slot').innerHTML = svg; })
                 .catch(console.error);
 
-            // /static に置いた “currentColor 化済み” のSVGを差し込む
+            // /static に置いた "currentColor 化済み" のSVGを差し込む
             fetch('sankoku-logo.svg')
                 .then(r => r.text())
                 .then(svg => { document.getElementById('logo-slot-2').innerHTML = svg; })
                 .catch(console.error);
+
+            // INFO バナーの内容を読み込み
+            fetch('/data/info.json')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('info-label').textContent = data.title;
+                    document.getElementById('info-detail').innerHTML = data.content;
+                    document.getElementById('info-banner').style.display = 'block';
+                })
+                .catch(() => {
+                    // info.json がない場合はバナーを非表示のまま
+                });
             </script>
 
             <!-- FOOTER & COPYRIGHT SCRIPT -->

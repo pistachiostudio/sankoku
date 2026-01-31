@@ -24,6 +24,8 @@ setup-win: clean
 	unzip vss_windows_amd64.zip
 
 build:
+	@echo "Generating info banner..."
+	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
 	@echo "Generating logs..."
@@ -32,6 +34,8 @@ build:
 	./vss build
 
 build-win:
+	@echo "Generating info banner..."
+	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
 	@echo "Generating logs..."
@@ -40,6 +44,8 @@ build-win:
 	./vss.exe build
 
 serve:
+	@echo "Generating info banner..."
+	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
 	@echo "Generating logs..."
@@ -48,6 +54,8 @@ serve:
 	./vss serve
 
 serve-win:
+	@echo "Generating info banner..."
+	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
 	@echo "Generating logs..."
