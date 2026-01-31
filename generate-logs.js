@@ -156,34 +156,43 @@ function getDataFromGPX(gpxPath) {
 }
 
 // パス設定
-const logsDir = path.join(__dirname, 'static', 'data', 'logs');
-const outputFile = path.join(__dirname, 'static', 'data', 'logs.json');
+const activityLogsDir = path.join(__dirname, 'static', 'data', 'activity_logs');
+const activityLogsOutputFile = path.join(__dirname, 'static', 'data', 'activity_logs.json');
+const trainingLogsDir = path.join(__dirname, 'static', 'data', 'training_logs');
+const trainingLogsOutputFile = path.join(__dirname, 'static', 'data', 'training_logs.json');
 
-try {
-  // logsフォルダが存在するか確認
-  if (!fs.existsSync(logsDir)) {
-    console.log(`Creating ${logsDir}`);
-    fs.mkdirSync(logsDir, { recursive: true });
+/**
+ * 指定ディレクトリ内のログデータを処理してJSONを生成
+ * @param {string} dataDir - データディレクトリのパス
+ * @param {string} outputFile - 出力JSONファイルのパス
+ * @param {string} dataType - データタイプ ('logs' | 'training')
+ */
+function processLogData(dataDir, outputFile, dataType) {
+  // フォルダが存在するか確認
+  if (!fs.existsSync(dataDir)) {
+    console.log(`Creating ${dataDir}`);
+    fs.mkdirSync(dataDir, { recursive: true });
   }
 
   // サブフォルダ一覧を取得（yyyymmdd_name 形式）
-  const entries = fs.readdirSync(logsDir, { withFileTypes: true });
+  const entries = fs.readdirSync(dataDir, { withFileTypes: true });
   const logFolders = entries
     .filter(entry => entry.isDirectory() && /^\d{8}_/.test(entry.name))
     .map(entry => entry.name);
 
   if (logFolders.length === 0) {
-    console.log('No log folders found in logs directory');
-    fs.writeFileSync(outputFile, JSON.stringify({ logs: [] }, null, 2));
-    console.log('✓ Generated empty logs.json');
-    process.exit(0);
+    console.log(`No folders found in ${dataType} directory`);
+    fs.writeFileSync(outputFile, JSON.stringify({ [dataType]: [] }, null, 2));
+    console.log(`✓ Generated empty ${path.basename(outputFile)}`);
+    return;
   }
 
   // 各フォルダを処理
-  const logs = logFolders.map(folder => {
-    const folderPath = path.join(logsDir, folder);
+  const items = logFolders.map(folder => {
+    const folderPath = path.join(dataDir, folder);
     const yamlPath = path.join(folderPath, 'info.yaml');
     const gpxPath = path.join(folderPath, 'track.gpx');
+    const fitPath = path.join(folderPath, 'track.fit');
 
     // info.yamlを読み込み
     if (!fs.existsSync(yamlPath)) {
@@ -196,9 +205,6 @@ try {
 
     // GPXファイルの有無を確認
     const hasGpx = fs.existsSync(gpxPath);
-
-    // FITファイルの有無を確認
-    const fitPath = path.join(folderPath, 'track.fit');
     const hasFit = fs.existsSync(fitPath);
 
     // GPXから位置情報と標高を取得
@@ -219,21 +225,30 @@ try {
       gpx: hasGpx ? `${folder}/track.gpx` : null,
       fit: hasFit ? `${folder}/track.fit` : null
     };
-  }).filter(log => log !== null);
+  }).filter(item => item !== null);
 
   // 日付で降順ソート
-  logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // JSONファイルとして保存
-  fs.writeFileSync(outputFile, JSON.stringify({ logs }, null, 2));
+  fs.writeFileSync(outputFile, JSON.stringify({ [dataType]: items }, null, 2));
 
-  console.log(`✓ Generated logs.json with ${logs.length} records`);
-  logs.forEach(log => {
-    const gpxStatus = log.gpx ? '📍' : '  ';
-    console.log(`  ${gpxStatus} ${log.id}: ${log.mountain} (${log.date})`);
+  console.log(`✓ Generated ${path.basename(outputFile)} with ${items.length} records`);
+  items.forEach(item => {
+    const status = item.gpx ? '📍' : (item.fit ? '🏃' : '  ');
+    const label = item.mountain || item.activity || item.id;
+    console.log(`  ${status} ${item.id}: ${label} (${item.date})`);
   });
+}
+
+try {
+  // 山行ログを処理
+  processLogData(activityLogsDir, activityLogsOutputFile, 'activity_logs');
+
+  // トレーニングデータを処理
+  processLogData(trainingLogsDir, trainingLogsOutputFile, 'training_logs');
 
 } catch (error) {
-  console.error('Error generating logs:', error);
+  console.error('Error generating data:', error);
   process.exit(1);
 }
