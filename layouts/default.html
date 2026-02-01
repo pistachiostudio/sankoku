@@ -150,6 +150,22 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     display: block;
                     border-left-color: #00ff08;
                 }
+                /* Mobile: move banner below the cat icon */
+                @media screen and (max-width: 768px) {
+                    .info-banner {
+                        top: 10px;
+                        left: 55px;
+                        max-width: calc(100% - 70px);
+                        padding: 6px 12px;
+                    }
+                    .info-label {
+                        font-size: 16px;
+                    }
+                    .info-detail {
+                        font-size: 14px;
+                        padding: 6px 0 6px 10px;
+                    }
+                }
             </style>
 
             <!-- TOP INFORMATION -->
