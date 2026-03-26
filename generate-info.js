@@ -6,8 +6,11 @@ const outputPath = path.join(__dirname, 'static', 'data', 'info.json');
 
 // シンプルなMarkdown→HTML変換
 function simpleMarkdownToHtml(text) {
+  // <!-- ... --> コメントを除去（複数行対応）
+  let html = text.replace(/<!--[\s\S]*?-->/g, '');
+
   // **text** → <strong>text</strong>
-  let html = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
   // 段落分け（空行で区切り）
   const paragraphs = html.split(/\n\s*\n/);
@@ -22,41 +25,48 @@ function simpleMarkdownToHtml(text) {
   return html;
 }
 
-// YAMLフロントマターをパース
-function parseFrontmatter(content) {
+// 複数フロントマターブロックをパース
+// --- で区切られたブロックを複数取得し、最後の本文も返す
+function parseMultipleFrontmatters(content) {
   const lines = content.replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let i = 0;
 
-  // フロントマターの開始を確認
-  if (lines[0].trim() !== '---') {
-    return { frontmatter: {}, body: content };
-  }
-
-  // フロントマターの終了位置を探す
-  let endIndex = -1;
-  for (let i = 1; i < lines.length; i++) {
+  while (i < lines.length) {
+    // --- の開始を探す
     if (lines[i].trim() === '---') {
-      endIndex = i;
-      break;
+      const startIdx = i;
+      i++;
+      // --- の終了を探す
+      while (i < lines.length && lines[i].trim() !== '---') {
+        i++;
+      }
+      if (i < lines.length) {
+        // フロントマターをパース
+        const frontmatter = {};
+        for (let j = startIdx + 1; j < i; j++) {
+          const match = lines[j].match(/^(\w+):\s*(.*)$/);
+          if (match) {
+            frontmatter[match[1]] = match[2].trim();
+          }
+        }
+        blocks.push(frontmatter);
+        i++; // --- の次の行へ
+      }
+    } else {
+      break; // フロントマター以外の行に到達
+    }
+
+    // ブロック間の空行をスキップ
+    while (i < lines.length && lines[i].trim() === '') {
+      i++;
     }
   }
 
-  if (endIndex === -1) {
-    return { frontmatter: {}, body: content };
-  }
+  // 残りの本文
+  const body = lines.slice(i).join('\n').trim();
 
-  // フロントマターをパース
-  const frontmatter = {};
-  for (let i = 1; i < endIndex; i++) {
-    const match = lines[i].match(/^(\w+):\s*(.*)$/);
-    if (match) {
-      frontmatter[match[1]] = match[2].trim();
-    }
-  }
-
-  // 本文を取得
-  const body = lines.slice(endIndex + 1).join('\n').trim();
-
-  return { frontmatter, body };
+  return { blocks, body };
 }
 
 try {
@@ -68,16 +78,32 @@ try {
 
   // ファイルを読み込み
   const content = fs.readFileSync(infoMdPath, 'utf8');
-  const { frontmatter, body } = parseFrontmatter(content);
+  const { blocks, body } = parseMultipleFrontmatters(content);
+
+  // 最初のブロックからtitleを取得
+  const title = (blocks[0] && blocks[0].title) || 'INFO';
 
   // HTMLに変換
   const htmlContent = simpleMarkdownToHtml(body);
 
   // JSONを生成
   const result = {
-    title: frontmatter.title || 'INFO',
+    title: title,
     content: htmlContent
   };
+
+  // イベント情報を配列で追加
+  const events = blocks
+    .filter(b => b.event_date || b.event_name || b.event_area)
+    .map(b => ({
+      date: b.event_date || '',
+      name: b.event_name || '',
+      area: b.event_area || ''
+    }));
+
+  if (events.length > 0) {
+    result.events = events;
+  }
 
   // 出力ディレクトリが存在するか確認
   const outputDir = path.dirname(outputPath);
@@ -91,6 +117,11 @@ try {
   console.log('✓ Generated info.json');
   console.log(`  Title: ${result.title}`);
   console.log(`  Content: ${result.content.substring(0, 50)}...`);
+  if (result.events) {
+    result.events.forEach((e, i) => {
+      console.log(`  Event ${i + 1}: ${e.name} (${e.date})`);
+    });
+  }
 
 } catch (error) {
   console.error('Error generating info.json:', error);

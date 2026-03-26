@@ -95,10 +95,15 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
             <!-- INFO BANNER -->
             <div class="info-banner" id="info-banner" style="display: none;">
                 <span class="info-label" id="info-label">INFO</span>
-                <div class="info-detail" id="info-detail"></div>
+                <div class="info-detail" id="info-detail">
+                    <!-- カウントダウン（JSで動的に生成） -->
+                    <div id="countdown-container"></div>
+                    <!-- 通常のお知らせテキスト -->
+                    <div id="info-text"></div>
+                </div>
             </div>
             <style>
-                /* INFO Banner - Pattern B: Simple with subtle background */
+                /* INFO Banner */
                 .info-banner {
                     position: fixed;
                     top: 20px;
@@ -150,6 +155,88 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     display: block;
                     border-left-color: #00ff08;
                 }
+
+                /* Countdown */
+                .countdown-section {
+                    margin-bottom: 8px;
+                }
+                .countdown-title {
+                    font-size: 15px;
+                    color: #00ff08;
+                    letter-spacing: 1px;
+                    margin-bottom: 8px;
+                }
+                .countdown-boxes {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .countdown-box {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    min-width: 44px;
+                }
+                .countdown-num {
+                    font-family: 'VT323', monospace;
+                    font-size: 32px;
+                    color: #DE6A1C;
+                    line-height: 1;
+                    letter-spacing: 2px;
+                    transition: color 0.3s ease, text-shadow 0.3s ease;
+                }
+                .countdown-num.urgent {
+                    color: #ff3333;
+                    text-shadow: 0 0 10px rgba(255, 51, 51, 0.7);
+                    animation: urgent-blink 1s ease-in-out infinite;
+                }
+                @keyframes urgent-blink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                }
+                .countdown-unit {
+                    font-family: 'VT323', monospace;
+                    font-size: 11px;
+                    color: #5a7a6a;
+                    letter-spacing: 1px;
+                    margin-top: 2px;
+                }
+                .countdown-sep {
+                    font-family: 'VT323', monospace;
+                    font-size: 28px;
+                    color: #5a7a6a;
+                    margin-bottom: 14px;
+                }
+                .countdown-progress {
+                    margin-top: 8px;
+                    font-family: 'VT323', monospace;
+                    font-size: 14px;
+                    color: #5a7a6a;
+                    letter-spacing: 0;
+                    line-height: 1;
+                }
+                .countdown-tbd {
+                    font-family: 'VT323', monospace;
+                    font-size: 20px;
+                    color: #5a7a6a;
+                    letter-spacing: 2px;
+                    margin: 8px 0;
+                }
+                .countdown-section + .countdown-section {
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 1px solid #2a4a3a;
+                }
+                .countdown-meta {
+                    margin-top: 8px;
+                    font-size: 15px;
+                    color: #e39d6e;
+                }
+                .countdown-meta-label {
+                    color: #DE6A1C;
+                    margin-right: 4px;
+                }
+
                 /* Mobile: move banner below the cat icon */
                 @media screen and (max-width: 768px) {
                     .info-banner {
@@ -164,6 +251,15 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     .info-detail {
                         font-size: 14px;
                         padding: 6px 0 6px 10px;
+                    }
+                    .countdown-num {
+                        font-size: 26px;
+                    }
+                    .countdown-box {
+                        min-width: 36px;
+                    }
+                    .countdown-sep {
+                        font-size: 22px;
                     }
                 }
             </style>
@@ -253,8 +349,125 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('info-label').textContent = data.title;
-                    document.getElementById('info-detail').innerHTML = data.content;
+                    document.getElementById('info-text').innerHTML = data.content;
                     document.getElementById('info-banner').style.display = 'block';
+
+                    // カウントダウン表示（複数イベント対応）
+                    var events = data.events || [];
+                    // 旧形式(単体event)の後方互換
+                    if (!data.events && data.event) { events = [data.event]; }
+
+                    var container = document.getElementById('countdown-container');
+                    var now = new Date();
+                    var timers = [];
+
+                    for (var i = 0; i < events.length; i++) {
+                        var evt = events[i];
+                        var isTBD = !evt.date || evt.date.toUpperCase() === 'TBD';
+                        var eventDate = isTBD ? null : new Date(evt.date + 'T00:00:00');
+
+                        // 過去のイベントはスキップ
+                        if (!isTBD && eventDate <= now) continue;
+
+                        var html = '<div class="countdown-section">';
+
+                        // イベント名
+                        if (evt.name) {
+                            html += '<div class="countdown-title">>>> ' + evt.name + '</div>';
+                        }
+
+                        // エリア
+                        if (evt.area) {
+                            html += '<div class="countdown-meta"><span class="countdown-meta-label">Area:</span>' + evt.area + '</div>';
+                        }
+
+                        if (isTBD) {
+                            html += '<div class="countdown-boxes">' +
+                                '<div class="countdown-box"><span class="countdown-num">--</span><span class="countdown-unit">DAYS</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num">--</span><span class="countdown-unit">HR</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num">--</span><span class="countdown-unit">MIN</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num">--</span><span class="countdown-unit">SEC</span></div>' +
+                                '</div>';
+                            html += '<div class="countdown-tbd">[ Date TBD — Stay tuned ]</div>';
+                        } else {
+                            html += '<div class="countdown-boxes">' +
+                                '<div class="countdown-box"><span class="countdown-num" id="cd-d' + i + '">00</span><span class="countdown-unit">DAYS</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num" id="cd-h' + i + '">00</span><span class="countdown-unit">HR</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num" id="cd-m' + i + '">00</span><span class="countdown-unit">MIN</span></div>' +
+                                '<div class="countdown-sep">:</div>' +
+                                '<div class="countdown-box"><span class="countdown-num" id="cd-s' + i + '">00</span><span class="countdown-unit">SEC</span></div>' +
+                                '</div>';
+                            html += '<div class="countdown-progress"><span id="cd-b' + i + '"></span></div>';
+                            timers.push({ eventDate: eventDate, idx: i });
+                        }
+
+                        html += '</div>';
+                        container.innerHTML += html;
+                    }
+
+                    // カウントダウンタイマー開始
+                    for (var t = 0; t < timers.length; t++) {
+                        (function(eventDate, idx) {
+                            var announceDate = new Date(eventDate);
+                            announceDate.setDate(announceDate.getDate() - 30);
+                            var now0 = new Date();
+                            var totalSpan;
+                            if (announceDate < now0) {
+                                totalSpan = eventDate - announceDate;
+                            } else {
+                                totalSpan = eventDate - now0;
+                                announceDate = now0;
+                            }
+
+                            function tick() {
+                                var now2 = new Date();
+                                var diff = eventDate - now2;
+                                var dEl = document.getElementById('cd-d' + idx);
+                                var hEl = document.getElementById('cd-h' + idx);
+                                var mEl = document.getElementById('cd-m' + idx);
+                                var sEl = document.getElementById('cd-s' + idx);
+                                var barEl = document.getElementById('cd-b' + idx);
+                                if (!dEl) return;
+
+                                if (diff <= 0) {
+                                    dEl.textContent = '00'; hEl.textContent = '00';
+                                    mEl.textContent = '00'; sEl.textContent = '00';
+                                    barEl.textContent = '▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ TODAY!';
+                                    return;
+                                }
+
+                                var days = Math.floor(diff / 86400000);
+                                var hours = Math.floor((diff % 86400000) / 3600000);
+                                var min = Math.floor((diff % 3600000) / 60000);
+                                var sec = Math.floor((diff % 60000) / 1000);
+
+                                dEl.textContent = String(days).padStart(2, '0');
+                                hEl.textContent = String(hours).padStart(2, '0');
+                                mEl.textContent = String(min).padStart(2, '0');
+                                sEl.textContent = String(sec).padStart(2, '0');
+
+                                var isUrgent = days < 3;
+                                dEl.classList.toggle('urgent', isUrgent);
+                                hEl.classList.toggle('urgent', isUrgent);
+                                mEl.classList.toggle('urgent', isUrgent);
+                                sEl.classList.toggle('urgent', isUrgent);
+
+                                var elapsed = now2 - announceDate;
+                                var pct = Math.min(Math.max(elapsed / totalSpan, 0), 1);
+                                var barLen = 20;
+                                var filled = Math.round(pct * barLen);
+                                barEl.textContent = '▓'.repeat(filled) + '░'.repeat(barLen - filled) +
+                                    ' ' + Math.round(pct * 100) + '%';
+                            }
+                            tick();
+                            setInterval(tick, 1000);
+                        })(timers[t].eventDate, timers[t].idx);
+                    }
                 })
                 .catch(() => {
                     // info.json がない場合はバナーを非表示のまま
