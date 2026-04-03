@@ -32,6 +32,7 @@ Let's explore peaks and trails together—any season, any country, any mountain.
 - Koyama
 - momo
 - Ono
+- Oyakata
 - PARKGOLF
 - [Ryu Wakimoto (Support Rider)](bio/ryu_wakimoto.html)
 - Sasadesune
