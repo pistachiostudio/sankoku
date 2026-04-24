@@ -5,5 +5,5 @@ vss
 dist
 vss_linux_amd64*
 .vscode
-.claude/
 .DS_Store
+settings.local.json
