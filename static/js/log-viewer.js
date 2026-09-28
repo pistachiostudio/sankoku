@@ -1,4 +1,25 @@
 // ============================================
+// Theme Colors
+// ============================================
+// Leaflet's SVG renderer and Chart.js both need a resolved color string,
+// not a raw `var(--x)` reference, so read the current theme's CSS custom
+// properties once and reuse the actual value. Keeps this file in sync with
+// static/css/log-viewer.css's :root without duplicating hex codes here.
+function themeColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Same as themeColor() but as an rgba() string with the given alpha, for
+// chart fills that need a translucent version of a theme color.
+function themeColorAlpha(name, alpha) {
+    const hex = themeColor(name).replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ============================================
 // Global State
 // ============================================
 let logsData = [];
@@ -26,14 +47,14 @@ function initMap() {
 // Custom Marker Icon
 // ============================================
 function createMarkerIcon(hasGpx = false) {
-    const color = hasGpx ? '#1cde33' : '#DE6A1C';
+    const color = hasGpx ? themeColor('--title-color') : themeColor('--main-font-color');
     return L.divIcon({
         className: 'custom-marker',
         html: `<div style="
             width: 24px;
             height: 24px;
             background: ${color};
-            border: 3px solid #006D4D;
+            border: 3px solid ${themeColor('--main-bg-color')};
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
@@ -330,7 +351,7 @@ function renderMarkers() {
             icon: createMarkerIcon(!!log.gpx)
         }).addTo(map);
 
-        const gpxBadge = log.gpx ? '<span style="background:#1cde33;color:#006D4D;padding:0 4px;margin-left:5px;font-size:0.8rem;">GPX</span>' : '';
+        const gpxBadge = log.gpx ? `<span style="background:${themeColor('--title-color')};color:${themeColor('--main-bg-color')};padding:0 4px;margin-left:5px;font-size:0.8rem;">GPX</span>` : '';
         const popupContent = `
             <div class="popup-mountain">${log.mountain}${gpxBadge}</div>
             <div class="popup-info">
@@ -770,8 +791,8 @@ function initGPXMap(logId, trackData, isFit = false) {
             .map(p => [p.lat, p.lon]);
     }
 
-    // Draw track (FITは黄緑、GPXはオレンジ)
-    const trackColor = isFit ? '#1cde33' : '#DE6A1C';
+    // Draw track (FITは title-color、GPXはmain-font-color)
+    const trackColor = isFit ? themeColor('--title-color') : themeColor('--main-font-color');
     const trackLayer = L.polyline(latlngs, {
         color: trackColor,
         weight: 4,
@@ -782,14 +803,15 @@ function initGPXMap(logId, trackData, isFit = false) {
     if (latlngs.length > 0) {
         const startIcon = L.divIcon({
             className: 'custom-marker',
-            html: `<div style="width:18px;height:18px;background:#1cde33;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#006D4D;font-family:VT323;font-size:11px;font-weight:bold;">S</div>`,
+            html: `<div style="width:18px;height:18px;background:${themeColor('--title-color')};border:2px solid ${themeColor('--main-bg-color')};border-radius:50%;display:flex;align-items:center;justify-content:center;color:${themeColor('--main-bg-color')};font-family:VT323;font-size:11px;font-weight:bold;">S</div>`,
             iconSize: [18, 18],
             iconAnchor: [9, 9]
         });
 
+        // End marker stays a fixed red (goal marker) regardless of theme.
         const endIcon = L.divIcon({
             className: 'custom-marker',
-            html: `<div style="width:18px;height:18px;background:#F24C3D;border:2px solid #006D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:VT323;font-size:11px;font-weight:bold;">G</div>`,
+            html: `<div style="width:18px;height:18px;background:#F24C3D;border:2px solid ${themeColor('--main-bg-color')};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-family:VT323;font-size:11px;font-weight:bold;">G</div>`,
             iconSize: [18, 18],
             iconAnchor: [9, 9]
         });
@@ -798,10 +820,10 @@ function initGPXMap(logId, trackData, isFit = false) {
         L.marker(latlngs[latlngs.length - 1], { icon: endIcon }).addTo(gpxMap);
     }
 
-    // Position marker for playback
+    // Position marker for playback stays a fixed bright yellow (attention marker).
     const positionIcon = L.divIcon({
         className: 'position-marker',
-        html: `<div style="width:14px;height:14px;background:#ffff00;border:2px solid #006D4D;border-radius:50%;box-shadow:0 0 8px rgba(255,255,0,0.8);"></div>`,
+        html: `<div style="width:14px;height:14px;background:#ffff00;border:2px solid ${themeColor('--main-bg-color')};border-radius:50%;box-shadow:0 0 8px rgba(255,255,0,0.8);"></div>`,
         iconSize: [14, 14],
         iconAnchor: [7, 7]
     });
@@ -863,8 +885,8 @@ function drawElevationChart(logId, sampledPoints) {
             datasets: [{
                 label: 'elevation',
                 data: elevData,
-                borderColor: '#DE6A1C',
-                backgroundColor: 'rgba(222, 106, 28, 0.3)',
+                borderColor: themeColor('--main-font-color'),
+                backgroundColor: themeColorAlpha('--main-font-color', 0.3),
                 fill: true,
                 tension: 0.2,
                 pointRadius: 0,
@@ -888,7 +910,7 @@ function drawElevationChart(logId, sampledPoints) {
                     min: Math.max(0, minElev - 20),
                     max: maxElev + 20,
                     ticks: {
-                        color: '#DE6A1C',
+                        color: themeColor('--main-font-color'),
                         font: { family: 'VT323', size: 10 },
                         maxTicksLimit: 3,
                         callback: (val) => val + 'm'
@@ -1016,8 +1038,8 @@ function drawMetricsChart(logId, sampledPoints, trackData) {
             scales: {
                 x: {
                     display: true,
-                    title: { display: true, text: 'km', color: '#e39d6e', font: { family: 'VT323' } },
-                    ticks: { color: '#e39d6e', font: { family: 'VT323' }, maxTicksLimit: 8 },
+                    title: { display: true, text: 'km', color: themeColor('--link-color'), font: { family: 'VT323' } },
+                    ticks: { color: themeColor('--link-color'), font: { family: 'VT323' }, maxTicksLimit: 8 },
                     grid: { color: 'rgba(0, 88, 63, 0.3)' }
                 },
                 yPace: {

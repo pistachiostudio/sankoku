@@ -113,7 +113,7 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     max-width: 500px;
                     margin: 0 auto;
                     border: none;
-                    border-left: 3px solid #DE6A1C;
+                    border-left: 3px solid var(--main-font-color);
                     padding: 8px 15px;
                     cursor: pointer;
                     box-shadow: none;
@@ -124,36 +124,36 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     transition: border-color 0.2s ease, background 0.2s ease;
                 }
                 .info-banner:hover {
-                    border-left-color: #00ff08;
-                    background: rgba(0, 77, 54, 0.95);
+                    border-left-color: var(--link-hover-color);
+                    background: var(--main-bg-color);
                 }
                 .info-label {
                     font-family: 'VT323', monospace;
                     font-size: 18px;
-                    color: #DE6A1C;
+                    color: var(--main-font-color);
                     letter-spacing: 2px;
                     transition: color 0.2s ease, text-shadow 0.2s ease;
                 }
                 .info-banner:hover .info-label {
-                    color: #00ff08;
-                    text-shadow: 0 0 10px rgba(0, 255, 8, 0.5);
+                    color: var(--link-hover-color);
+                    text-shadow: 0 0 10px var(--link-hover-color);
                 }
                 .info-detail {
                     display: none;
                     background: transparent;
                     border: none;
-                    border-left: 1px solid #00583f;
+                    border-left: 1px solid var(--hr-line-color);
                     padding: 8px 0 8px 12px;
                     margin-top: 8px;
                     margin-left: 0;
                     font-family: 'VT323', monospace;
                     font-size: 16px;
-                    color: #e39d6e;
+                    color: var(--link-color);
                     box-shadow: none;
                 }
                 .info-banner:hover .info-detail {
                     display: block;
-                    border-left-color: #00ff08;
+                    border-left-color: var(--link-hover-color);
                 }
 
                 /* Countdown */
@@ -162,7 +162,7 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                 }
                 .countdown-title {
                     font-size: 15px;
-                    color: #00ff08;
+                    color: var(--link-hover-color);
                     letter-spacing: 1px;
                     margin-bottom: 8px;
                 }
@@ -180,7 +180,7 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                 .countdown-num {
                     font-family: 'VT323', monospace;
                     font-size: 32px;
-                    color: #DE6A1C;
+                    color: var(--main-font-color);
                     line-height: 1;
                     letter-spacing: 2px;
                     transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -197,35 +197,35 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                 .countdown-unit {
                     font-family: 'VT323', monospace;
                     font-size: 11px;
-                    color: #5a7a6a;
+                    color: var(--muted-text-color);
                     letter-spacing: 1px;
                     margin-top: 2px;
                 }
                 .countdown-sep {
                     font-family: 'VT323', monospace;
                     font-size: 28px;
-                    color: #5a7a6a;
+                    color: var(--muted-text-color);
                     margin-bottom: 14px;
                 }
                 .countdown-tbd {
                     font-family: 'VT323', monospace;
                     font-size: 20px;
-                    color: #5a7a6a;
+                    color: var(--muted-text-color);
                     letter-spacing: 2px;
                     margin: 8px 0;
                 }
                 .countdown-section + .countdown-section {
                     margin-top: 12px;
                     padding-top: 12px;
-                    border-top: 1px solid #2a4a3a;
+                    border-top: 1px solid var(--hr-line-color);
                 }
                 .countdown-meta {
                     margin-top: 8px;
                     font-size: 15px;
-                    color: #e39d6e;
+                    color: var(--link-color);
                 }
                 .countdown-meta-label {
-                    color: #DE6A1C;
+                    color: var(--main-font-color);
                     margin-right: 4px;
                 }
 

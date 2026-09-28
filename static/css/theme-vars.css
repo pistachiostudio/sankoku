@@ -1,0 +1,48 @@
+/*
+Single source of truth for the site's color theme.
+
+Every page that needs the site's colors imports/links this file instead of
+redeclaring its own copy of these variables. That way, switching color
+themes means editing the values ONCE, here, and everything (the main site,
+the activity log viewer, the member bio pages) updates together.
+
+If you add a new page that needs the theme colors, link this file rather
+than copy-pasting a new :root block — a duplicated block is exactly how the
+site ended up with three different pages stuck on an old green theme after
+a color switch.
+
+Only color values belong here. Layout-ish variables that happen to live in
+style.css's :root (--main-font-size, --logo-width, --drop-shadow-*, etc.)
+are NOT colors and stay local to style.css.
+*/
+:root {
+  /* MAIN BACKGROUND COLOR */
+  --main-bg-color: #0d0a08;
+  /* MAIN FONT COLOR */
+  --main-font-color: #ffb000;
+  /* TOP TITLE LINK COLOR */
+  --title-color: #ff8c00;
+  /* LOGO SVG FILL & STROKE COLOR (big outlined kanji logo) */
+  --logo-fill-color: transparent;
+  --logo-stroke-color: #ffb000;
+  /* LOGO-2 SVG FILL & STROKE COLOR (small solid kanji logo) */
+  --logo-fill-color-2: #ff5f56;
+  --logo-stroke-color-2: transparent;
+  /* LINK COLOR SETTINGS */
+  --link-color: #e8944a;
+  --link-hover-color: #ffd166;
+  /* SOCIAL ICON SETTINGS */
+  --social-button-color: #caa06c;
+  --social-button-hover-color: #ffb000;
+  /* TEXT SELECTION COLOR */
+  --selection-text-color: #1a1210;
+  --selection-bg-color: #ff8c00;
+  /* DOGGO (TOP *) COLOR, also used as the general "accent/pop" color
+     (e.g. member bio pages' --accent-color) */
+  --doggo-color: #ff5f56;
+  --accent-color: #ff5f56;
+  /* HR LINE COLOR */
+  --hr-line-color: #4a2e12;
+  /* MUTED / SECONDARY TEXT (e.g. countdown unit labels) */
+  --muted-text-color: #8a6a4a;
+}

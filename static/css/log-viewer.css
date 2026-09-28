@@ -1,12 +1,7 @@
-        :root {
-            --main-bg-color: #006D4D;
-            --main-font-color: #DE6A1C;
-            --title-color: #1cde33;
-            --link-color: #e39d6e;
-            --link-hover-color: #00ff08;
-            --hr-line-color: #00583f;
-            --selection-bg-color: #F24C3D;
-        }
+        /* Colors come from theme-vars.css (imported via <link> in log.html),
+           the single source of truth for the site's color theme. Don't
+           redeclare a :root block here — that's how this page ended up
+           stuck on an old theme once already. */
 
         * {
             box-sizing: border-box;
