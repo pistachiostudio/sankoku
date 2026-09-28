@@ -11,6 +11,11 @@ event_name: TBD
 event_area: TBD
 ---
 
+---
+event_date: 2026-11-01
+event_name: 検証テスト山
+---
+
 BOOOOOOM BOOOOOM Sankokukai...
 
 <!--
