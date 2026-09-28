@@ -207,14 +207,6 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     color: #5a7a6a;
                     margin-bottom: 14px;
                 }
-                .countdown-progress {
-                    margin-top: 8px;
-                    font-family: 'VT323', monospace;
-                    font-size: 14px;
-                    color: #5a7a6a;
-                    letter-spacing: 0;
-                    line-height: 1;
-                }
                 .countdown-tbd {
                     font-family: 'VT323', monospace;
                     font-size: 20px;
@@ -361,19 +353,42 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     var now = new Date();
                     var timers = [];
 
+                    function isTBDEvent(evt) {
+                        return !evt.date || evt.date.toUpperCase() === 'TBD';
+                    }
+
+                    // 過去のイベントを除外
+                    events = events.filter(function(evt) {
+                        if (isTBDEvent(evt)) return true;
+                        return new Date(evt.date + 'T00:00:00') > now;
+                    });
+
+                    // TBDイベントは、他に表示するイベントが無い場合のみ表示
+                    var hasConcreteEvent = events.some(function(evt) { return !isTBDEvent(evt); });
+                    if (hasConcreteEvent) {
+                        events = events.filter(function(evt) { return !isTBDEvent(evt); });
+                    }
+
                     for (var i = 0; i < events.length; i++) {
                         var evt = events[i];
-                        var isTBD = !evt.date || evt.date.toUpperCase() === 'TBD';
+                        var isTBD = isTBDEvent(evt);
                         var eventDate = isTBD ? null : new Date(evt.date + 'T00:00:00');
-
-                        // 過去のイベントはスキップ
-                        if (!isTBD && eventDate <= now) continue;
 
                         var html = '<div class="countdown-section">';
 
                         // イベント名
                         if (evt.name) {
                             html += '<div class="countdown-title">>>> ' + evt.name + '</div>';
+                        }
+
+                        // 日付（絶対日付）
+                        if (!isTBD) {
+                            var weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                            var dateLabel = eventDate.getFullYear() + '/' +
+                                ('0' + (eventDate.getMonth() + 1)).slice(-2) + '/' +
+                                ('0' + eventDate.getDate()).slice(-2) +
+                                '(' + weekdays[eventDate.getDay()] + ')';
+                            html += '<div class="countdown-meta"><span class="countdown-meta-label">Date:</span>' + dateLabel + '</div>';
                         }
 
                         // エリア
@@ -402,7 +417,6 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                                 '<div class="countdown-sep">:</div>' +
                                 '<div class="countdown-box"><span class="countdown-num" id="cd-s' + i + '">00</span><span class="countdown-unit">SEC</span></div>' +
                                 '</div>';
-                            html += '<div class="countdown-progress"><span id="cd-b' + i + '"></span></div>';
                             timers.push({ eventDate: eventDate, idx: i });
                         }
 
@@ -413,17 +427,6 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                     // カウントダウンタイマー開始
                     for (var t = 0; t < timers.length; t++) {
                         (function(eventDate, idx) {
-                            var announceDate = new Date(eventDate);
-                            announceDate.setDate(announceDate.getDate() - 30);
-                            var now0 = new Date();
-                            var totalSpan;
-                            if (announceDate < now0) {
-                                totalSpan = eventDate - announceDate;
-                            } else {
-                                totalSpan = eventDate - now0;
-                                announceDate = now0;
-                            }
-
                             function tick() {
                                 var now2 = new Date();
                                 var diff = eventDate - now2;
@@ -431,13 +434,11 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                                 var hEl = document.getElementById('cd-h' + idx);
                                 var mEl = document.getElementById('cd-m' + idx);
                                 var sEl = document.getElementById('cd-s' + idx);
-                                var barEl = document.getElementById('cd-b' + idx);
                                 if (!dEl) return;
 
                                 if (diff <= 0) {
                                     dEl.textContent = '00'; hEl.textContent = '00';
                                     mEl.textContent = '00'; sEl.textContent = '00';
-                                    barEl.textContent = '▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ TODAY!';
                                     return;
                                 }
 
@@ -456,13 +457,6 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                                 hEl.classList.toggle('urgent', isUrgent);
                                 mEl.classList.toggle('urgent', isUrgent);
                                 sEl.classList.toggle('urgent', isUrgent);
-
-                                var elapsed = now2 - announceDate;
-                                var pct = Math.min(Math.max(elapsed / totalSpan, 0), 1);
-                                var barLen = 20;
-                                var filled = Math.round(pct * barLen);
-                                barEl.textContent = '▓'.repeat(filled) + '░'.repeat(barLen - filled) +
-                                    ' ' + Math.round(pct * 100) + '%';
                             }
                             tick();
                             setInterval(tick, 1000);

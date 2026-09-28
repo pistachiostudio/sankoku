@@ -122,7 +122,7 @@ jobs:
 
             const fields = parseIssueForm(context.payload.issue.body);
             const eventDate = (fields["イベント日付"] || "").trim();
-            const eventName = (fields["山名"] || "").trim();
+            const eventName = (context.payload.issue.title || "").trim();
             const eventArea = (fields["エリア（任意）"] || "").trim();
             const newTitle = (fields["バナーラベル（任意・変更する場合のみ入力）"] || "").trim();
             const newBody = (fields["本文メッセージ（任意・変更する場合のみ入力）"] || "").trim();
