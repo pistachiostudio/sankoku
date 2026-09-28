@@ -11,6 +11,12 @@ event_name: TBD
 event_area: TBD
 ---
 
+---
+event_date: 2026-10-01
+event_name: 蛭ヶ岳
+event_area: 丹沢
+---
+
 BOOOOOOM BOOOOOM Sankokukai...
 
 <!--
