@@ -5,12 +5,6 @@ event_name: 守門岳
 event_area: 新潟
 ---
 
----
-event_date: 2026-10-01
-event_name: 蛭ヶ岳
-event_area: 丹沢
----
-
 BOOOOOOM BOOOOOM Sankokukai...
 
 <!--
