@@ -1,9 +1,4 @@
 // ============================================
-// Config (page-specific values set via window.LOG_VIEWER_CONFIG)
-// ============================================
-const CONFIG = window.LOG_VIEWER_CONFIG;
-
-// ============================================
 // Global State
 // ============================================
 let logsData = [];
@@ -54,9 +49,9 @@ function createMarkerIcon(hasGpx = false) {
 // ============================================
 async function loadData() {
     try {
-        const response = await fetch(CONFIG.dataUrl);
+        const response = await fetch('data/activity_logs.json');
         const data = await response.json();
-        logsData = data[CONFIG.dataKey];
+        logsData = data.activity_logs;
 
         updateStats();
         populateFilters();
@@ -69,30 +64,18 @@ async function loadData() {
 
 // ============================================
 // Update Statistics
-// (highest-peak / total-members / total-distance are only present on
-// pages that need them, so each block is a no-op when its element is absent)
 // ============================================
 function updateStats() {
     document.getElementById('total-climbs').textContent = logsData.length;
 
-    const highestEl = document.getElementById('highest-peak');
-    if (highestEl && logsData.length > 0) {
+    if (logsData.length > 0) {
         const highest = logsData.reduce((max, c) => c.altitude > max.altitude ? c : max, logsData[0]);
-        highestEl.textContent = `${highest.mountain} (${highest.altitude}m)`;
+        document.getElementById('highest-peak').textContent = `${highest.mountain} (${highest.altitude}m)`;
     }
 
-    const membersEl = document.getElementById('total-members');
-    if (membersEl) {
-        const allMembers = new Set();
-        logsData.forEach(c => c.members.forEach(m => allMembers.add(m)));
-        membersEl.textContent = allMembers.size;
-    }
-
-    const distanceEl = document.getElementById('total-distance');
-    if (distanceEl) {
-        // TODO: FITデータ読み込み後の合計距離集計は未実装
-        distanceEl.textContent = '-';
-    }
+    const allMembers = new Set();
+    logsData.forEach(c => c.members.forEach(m => allMembers.add(m)));
+    document.getElementById('total-members').textContent = allMembers.size;
 }
 
 // ============================================
@@ -682,12 +665,12 @@ async function loadTrackData(logId, log) {
 
         if (log.fit) {
             // FITファイルを読み込み
-            const response = await fetch(`${CONFIG.dataDir}/${log.fit}`);
+            const response = await fetch(`data/activity_logs/${log.fit}`);
             const arrayBuffer = await response.arrayBuffer();
             trackData = await parseFIT(arrayBuffer);
         } else if (log.gpx) {
             // GPXファイルを読み込み（既存のparseGPX関数を使用）
-            const response = await fetch(`${CONFIG.dataDir}/${log.gpx}`);
+            const response = await fetch(`data/activity_logs/${log.gpx}`);
             const gpxText = await response.text();
             trackData = parseGPX(gpxText);
             trackData.hasHeartRate = false;

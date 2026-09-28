@@ -46,7 +46,7 @@ py -3 -m pip install Pillow  # 画像リサイズに必要
    - 複数の `---` フロントマターブロックで複数イベントのカウントダウンを定義可能
    - `event_date: TBD` にすると「--」表示
 2. **`generate-slides-list.js`**: `static/slides/` の画像一覧を `static/slides/slides.json` に出力
-3. **`generate-logs.js`**: `static/data/activity_logs/` と `static/data/training_logs/` 内の `yyyymmdd_name/` 形式フォルダを処理し、各フォルダの `info.yaml` と `track.gpx` からJSONを生成
+3. **`generate-logs.js`**: `static/data/activity_logs/` 内の `yyyymmdd_name/` 形式フォルダを処理し、各フォルダの `info.yaml` と `track.gpx` からJSONを生成
 
 ### INFO バナーの更新
 

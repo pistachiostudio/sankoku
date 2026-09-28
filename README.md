@@ -69,13 +69,12 @@ make serve-win
 │   ├── css/                # スタイルシート
 │   ├── js/                 # JavaScript
 │   ├── data/                       # 生成データ（JSON）
-│   │   ├── activity_logs/          # 山行ログ（yyyymmdd_name/info.yaml, track.gpx）
-│   │   └── training_logs/          # トレーニングログ（同上）
+│   │   └── activity_logs/          # 山行ログ（yyyymmdd_name/info.yaml, track.gpx）
 │   └── slides/             # スライド画像
 │       └── originals/      # バックアップ（元画像）
 ├── generate-info.js       # INFOバナー生成スクリプト
 ├── generate-slides-list.js  # スライドリスト生成スクリプト
-├── generate-logs.js       # 山行/トレーニングログ生成スクリプト
+├── generate-logs.js       # 山行ログ生成スクリプト
 ├── resize-images.py       # 画像リサイズスクリプト
 └── Makefile               # ビルドコマンド
 ```

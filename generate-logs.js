@@ -158,14 +158,12 @@ function getDataFromGPX(gpxPath) {
 // パス設定
 const activityLogsDir = path.join(__dirname, 'static', 'data', 'activity_logs');
 const activityLogsOutputFile = path.join(__dirname, 'static', 'data', 'activity_logs.json');
-const trainingLogsDir = path.join(__dirname, 'static', 'data', 'training_logs');
-const trainingLogsOutputFile = path.join(__dirname, 'static', 'data', 'training_logs.json');
 
 /**
  * 指定ディレクトリ内のログデータを処理してJSONを生成
  * @param {string} dataDir - データディレクトリのパス
  * @param {string} outputFile - 出力JSONファイルのパス
- * @param {string} dataType - データタイプ ('logs' | 'training')
+ * @param {string} dataType - データタイプ ('activity_logs')
  */
 function processLogData(dataDir, outputFile, dataType) {
   // フォルダが存在するか確認
@@ -244,9 +242,6 @@ function processLogData(dataDir, outputFile, dataType) {
 try {
   // 山行ログを処理
   processLogData(activityLogsDir, activityLogsOutputFile, 'activity_logs');
-
-  // トレーニングデータを処理
-  processLogData(trainingLogsDir, trainingLogsOutputFile, 'training_logs');
 
 } catch (error) {
   console.error('Error generating data:', error);
