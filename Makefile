@@ -23,43 +23,28 @@ setup-win: clean
 	curl -OL https://github.com/vssio/go-vss/releases/latest/download/vss_windows_amd64.zip
 	unzip vss_windows_amd64.zip
 
-build:
+# ビルド前処理（info.json / slides.json / activity_logs.json 等を生成）
+generate:
 	@echo "Generating info banner..."
 	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
 	@echo "Generating slides list..."
 	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
 	@echo "Generating logs..."
 	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
+
+build: generate
 	@echo "Building site..."
 	./vss build
 
-build-win:
-	@echo "Generating info banner..."
-	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
-	@echo "Generating slides list..."
-	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
-	@echo "Generating logs..."
-	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
+build-win: generate
 	@echo "Building site..."
 	./vss.exe build
 
-serve:
-	@echo "Generating info banner..."
-	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
-	@echo "Generating slides list..."
-	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
-	@echo "Generating logs..."
-	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
+serve: generate
 	@echo "Starting development server..."
 	./vss serve
 
-serve-win:
-	@echo "Generating info banner..."
-	@node generate-info.js || echo "Warning: Node.js not found, skipping info generation"
-	@echo "Generating slides list..."
-	@node generate-slides-list.js || echo "Warning: Node.js not found, skipping slides list generation"
-	@echo "Generating logs..."
-	@node generate-logs.js || echo "Warning: Node.js not found, skipping logs generation"
+serve-win: generate
 	@echo "Starting development server..."
 	./vss.exe serve
 

@@ -61,16 +61,22 @@ make serve-win
 
 ```
 .
-├── index.md              # トップページ
+├── index.md               # トップページ
+├── INFO-message.md        # INFOバナーの内容
 ├── layouts/
-│   └── default.html      # メインレイアウト
+│   └── default.html       # メインレイアウト
 ├── static/
-│   ├── css/              # スタイルシート
-│   ├── js/               # JavaScript
-│   └── slides/           # スライド画像
-│       └── originals/    # バックアップ（元画像）
+│   ├── css/                # スタイルシート
+│   ├── js/                 # JavaScript
+│   ├── data/                       # 生成データ（JSON）
+│   │   ├── activity_logs/          # 山行ログ（yyyymmdd_name/info.yaml, track.gpx）
+│   │   └── training_logs/          # トレーニングログ（同上）
+│   └── slides/             # スライド画像
+│       └── originals/      # バックアップ（元画像）
+├── generate-info.js       # INFOバナー生成スクリプト
 ├── generate-slides-list.js  # スライドリスト生成スクリプト
-├── resize-images.py      # 画像リサイズスクリプト
-└── Makefile              # ビルドコマンド
+├── generate-logs.js       # 山行/トレーニングログ生成スクリプト
+├── resize-images.py       # 画像リサイズスクリプト
+└── Makefile               # ビルドコマンド
 ```
 
