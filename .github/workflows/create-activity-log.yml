@@ -1,0 +1,158 @@
+name: Create Activity Log from Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-log:
+    if: contains(github.event.issue.labels.*.name, 'activity-log')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check submitter is a collaborator
+        id: check-permission
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let allowed = false;
+            try {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.payload.issue.user.login,
+              });
+              allowed = ["admin", "write"].includes(data.permission);
+            } catch (e) {
+              allowed = false;
+            }
+            core.setOutput("allowed", allowed);
+
+      - name: Reject non-collaborator
+        if: steps.check-permission.outputs.allowed != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: "この自動登録フローは、リポジトリへの書き込み権限を持つメンバーのみ利用できます。",
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: "closed",
+            });
+
+      - uses: actions/checkout@v4
+        if: steps.check-permission.outputs.allowed == 'true'
+
+      - name: Parse issue and generate info.yaml
+        id: create
+        if: steps.check-permission.outputs.allowed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+
+            // Issue Formの本文は "### 見出し\n\n内容\n\n### 次の見出し\n..." という形式になる
+            function parseIssueForm(body) {
+              const sections = {};
+              const parts = body.split(/^### /m).filter(Boolean);
+              for (const part of parts) {
+                const lines = part.split("\n");
+                const heading = lines.shift().trim();
+                const content = lines.join("\n").trim();
+                sections[heading] = content === "_No response_" ? "" : content;
+              }
+              return sections;
+            }
+
+            // コロンや改行を含む値でも既存の簡易YAMLパーサー(generate-logs.js)が読めるよう、
+            // 必要な場合だけ `key: |` のマルチライン形式にフォールバックする
+            function yamlLine(key, value) {
+              if (!value) return `${key}: `;
+              if (value.includes("\n") || value.includes(":") || value.includes('"')) {
+                const indented = value.split("\n").map((l) => "  " + l).join("\n");
+                return `${key}: |\n${indented}`;
+              }
+              return `${key}: ${value}`;
+            }
+
+            const fields = parseIssueForm(context.payload.issue.body);
+            const mountain = (fields["山名"] || "").trim();
+            const date = (fields["日付"] || "").trim();
+            const area = (fields["エリア"] || "").trim();
+            const membersRaw = fields["メンバー"] || "";
+            const note = (fields["メモ（任意）"] || "").trim();
+
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+              core.setFailed(`日付の形式が正しくありません: "${date}"（YYYY-MM-DD形式で入力してください）`);
+              return;
+            }
+
+            const members = membersRaw
+              .split("\n")
+              .map((s) => s.trim())
+              .filter(Boolean);
+
+            const dateCompact = date.replace(/-/g, "");
+            const issueNumber = context.payload.issue.number;
+            const folderId = `${dateCompact}_issue${issueNumber}`;
+
+            const lines = [];
+            lines.push(yamlLine("mountain", mountain));
+            lines.push(yamlLine("date", date));
+            lines.push(yamlLine("area", area));
+            lines.push("members:");
+            members.forEach((m) => lines.push(`  - ${m}`));
+            lines.push(yamlLine("note", note));
+            lines.push("");
+
+            const dir = path.join("static", "data", "activity_logs", folderId);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, "info.yaml"), lines.join("\n"));
+
+            core.setOutput("folder_id", folderId);
+            core.setOutput("mountain", mountain);
+
+      - name: Create Pull Request
+        if: steps.check-permission.outputs.allowed == 'true' && steps.create.outputs.folder_id
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Add activity log: ${{ steps.create.outputs.mountain }} (#${{ github.event.issue.number }})"
+          branch: "activity-log/${{ steps.create.outputs.folder_id }}"
+          title: "山行ログ追加: ${{ steps.create.outputs.mountain }}"
+          body: |
+            Issue #${{ github.event.issue.number }} から自動生成しました。
+
+            **GPX/FITファイルをこのPRのブランチに追加してください:**
+            1. このPRの下部にあるブランチ名 `activity-log/${{ steps.create.outputs.folder_id }}` を開く
+            2. `static/data/activity_logs/${{ steps.create.outputs.folder_id }}/` フォルダに移動
+            3. 「Add file」→「Upload files」で `track.gpx`（または `track.fit`）をアップロードしてコミット
+            4. このPRに反映されるので、内容を確認してマージしてください
+          labels: activity-log
+
+      - name: Comment on issue
+        if: steps.check-permission.outputs.allowed == 'true' && steps.create.outputs.folder_id
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: "登録用のPRを作成しました。GPX/FITファイルを追加後、内容を確認してマージしてください。",
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: "closed",
+            });
