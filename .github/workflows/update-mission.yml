@@ -1,0 +1,192 @@
+name: Update Mission Banner from Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  update-mission:
+    if: contains(github.event.issue.labels.*.name, 'mission-update')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check submitter is a collaborator
+        id: check-permission
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let allowed = false;
+            try {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.payload.issue.user.login,
+              });
+              allowed = ["admin", "write"].includes(data.permission);
+            } catch (e) {
+              allowed = false;
+            }
+            core.setOutput("allowed", allowed);
+
+      - name: Reject non-collaborator
+        if: steps.check-permission.outputs.allowed != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: "この自動更新フローは、リポジトリへの書き込み権限を持つメンバーのみ利用できます。",
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: "closed",
+            });
+
+      - uses: actions/checkout@v4
+        if: steps.check-permission.outputs.allowed == 'true'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse issue and update INFO-message.md
+        id: update
+        if: steps.check-permission.outputs.allowed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const filePath = "INFO-message.md";
+
+            // Issue Formの本文は "### 見出し\n\n内容\n\n### 次の見出し\n..." という形式になる
+            function parseIssueForm(body) {
+              const sections = {};
+              const parts = body.split(/^### /m).filter(Boolean);
+              for (const part of parts) {
+                const lines = part.split("\n");
+                const heading = lines.shift().trim();
+                const content = lines.join("\n").trim();
+                sections[heading] = content === "_No response_" ? "" : content;
+              }
+              return sections;
+            }
+
+            // generate-info.js の parseMultipleFrontmatters と同じ仕様でパースする
+            function parseMultipleFrontmatters(content) {
+              const lines = content.replace(/\r\n/g, "\n").split("\n");
+              const blocks = [];
+              let i = 0;
+              while (i < lines.length) {
+                if (lines[i].trim() === "---") {
+                  const startIdx = i;
+                  i++;
+                  while (i < lines.length && lines[i].trim() !== "---") {
+                    i++;
+                  }
+                  if (i < lines.length) {
+                    const frontmatter = {};
+                    for (let j = startIdx + 1; j < i; j++) {
+                      const match = lines[j].match(/^(\w+):\s*(.*)$/);
+                      if (match) {
+                        frontmatter[match[1]] = match[2].trim();
+                      }
+                    }
+                    blocks.push(frontmatter);
+                    i++;
+                  }
+                } else {
+                  break;
+                }
+                while (i < lines.length && lines[i].trim() === "") {
+                  i++;
+                }
+              }
+              const body = lines.slice(i).join("\n").trim();
+              return { blocks, body };
+            }
+
+            function renderBlock(block) {
+              const lines = ["---"];
+              for (const [key, value] of Object.entries(block)) {
+                lines.push(`${key}: ${value}`);
+              }
+              lines.push("---");
+              return lines.join("\n");
+            }
+
+            const fields = parseIssueForm(context.payload.issue.body);
+            const eventDate = (fields["イベント日付"] || "").trim();
+            const eventName = (fields["山名"] || "").trim();
+            const eventArea = (fields["エリア（任意）"] || "").trim();
+            const newTitle = (fields["バナーラベル（任意・変更する場合のみ入力）"] || "").trim();
+            const newBody = (fields["本文メッセージ（任意・変更する場合のみ入力）"] || "").trim();
+
+            if (eventDate !== "TBD" && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+              core.setFailed(`イベント日付の形式が正しくありません: "${eventDate}"（YYYY-MM-DD形式かTBDで入力してください）`);
+              return;
+            }
+            // frontmatterは `key: value` の単一行のみ対応。改行や `:` を含む入力は安全のため拒否する
+            for (const [label, value] of [["山名", eventName], ["エリア", eventArea]]) {
+              if (value.includes("\n") || value.includes(":")) {
+                core.setFailed(`${label}に改行または":"を含めることはできません: "${value}"`);
+                return;
+              }
+            }
+
+            const existing = fs.existsSync(filePath)
+              ? fs.readFileSync(filePath, "utf8")
+              : "";
+            const { blocks, body: existingBody } = parseMultipleFrontmatters(existing);
+
+            if (blocks.length === 0) {
+              blocks.push({ title: newTitle || "INFO" });
+            } else if (newTitle) {
+              blocks[0].title = newTitle;
+            }
+
+            const newBlock = { event_date: eventDate, event_name: eventName };
+            if (eventArea) newBlock.event_area = eventArea;
+            blocks.push(newBlock);
+
+            const finalBody = newBody || existingBody;
+
+            const output = blocks.map(renderBlock).join("\n\n") + "\n\n" + finalBody + "\n";
+            fs.writeFileSync(filePath, output);
+
+            core.setOutput("event_name", eventName);
+
+      - name: Commit and push
+        if: steps.check-permission.outputs.allowed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INFO-message.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update mission banner: ${{ steps.update.outputs.event_name }} (#${{ github.event.issue.number }})"
+            git push
+          fi
+
+      - name: Comment on issue
+        if: steps.check-permission.outputs.allowed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: "Missionバナーを更新し、サイトに反映しました。",
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: "closed",
+            });

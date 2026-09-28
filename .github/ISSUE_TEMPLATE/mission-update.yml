@@ -1,0 +1,46 @@
+name: Missionバナー更新
+description: トップページの「Next Mission」バナーに新しいイベントを追加します（送信すると即座にサイトへ反映されます）
+title: "[Mission] "
+labels: ["mission-update"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        トップページのMissionバナーに新しいイベントを追加します。送信するとすぐにサイトに反映されるので、内容をよく確認してから送信してください。
+  - type: input
+    id: event_date
+    attributes:
+      label: イベント日付
+      description: "YYYY-MM-DD形式、または未定の場合はTBD"
+      placeholder: "2026-05-02"
+    validations:
+      required: true
+  - type: input
+    id: event_name
+    attributes:
+      label: 山名
+      placeholder: 乳（にゅう）
+    validations:
+      required: true
+  - type: input
+    id: event_area
+    attributes:
+      label: エリア（任意）
+      placeholder: 八ヶ岳
+    validations:
+      required: false
+  - type: input
+    id: title
+    attributes:
+      label: バナーラベル（任意・変更する場合のみ入力）
+      description: 空欄なら現在のラベルのまま変更しません
+      placeholder: Next Mission
+    validations:
+      required: false
+  - type: textarea
+    id: body
+    attributes:
+      label: 本文メッセージ（任意・変更する場合のみ入力）
+      description: 空欄なら現在の本文のまま変更しません
+    validations:
+      required: false
