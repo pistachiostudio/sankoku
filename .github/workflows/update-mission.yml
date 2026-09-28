@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   issues: write
+  actions: write
 
 jobs:
   update-mission:
@@ -161,6 +162,7 @@ jobs:
             core.setOutput("event_name", eventName);
 
       - name: Commit and push
+        id: commit
         if: steps.check-permission.outputs.allowed == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -168,10 +170,19 @@ jobs:
           git add INFO-message.md
           if git diff --cached --quiet; then
             echo "No changes to commit"
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "Update mission banner: ${{ steps.update.outputs.event_name }} (#${{ github.event.issue.number }})"
             git push
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Trigger Pages deploy
+        # GITHUB_TOKENでのpushはpages.ymlのpushトリガーを発火させない仕様のため、明示的にdispatchする
+        if: steps.check-permission.outputs.allowed == 'true' && steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref main
 
       - name: Comment on issue
         if: steps.check-permission.outputs.allowed == 'true'
