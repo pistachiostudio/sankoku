@@ -30,21 +30,21 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
 YOU CAN CHANGE COLORS & WEIGHT HERE! */
 :root {
   /* MAIN BACKGROUND COLOR */
-  --main-bg-color: #006D4D;
+  --main-bg-color: #0d0a08;
   /* MAIN FONT SETTINGS */
   --main-font-size: 20px;
-  --main-font-color: #DE6A1C;
+  --main-font-color: #ffb000;
   /* TOP TITLE LINK COLOR */
-  --title-color: #1cde33;
+  --title-color: #ff8c00;
   /* LOGO SVG FILL & STROKE COLOR */
   --logo-fill-color: transparent;
-  --logo-stroke-color:  #DE6A1C;
+  --logo-stroke-color:  #ffb000;
   --logo-width: 100%;
   --drop-shadow-r: transparent;  /* R (黒) */
   --drop-shadow-c: transparent;  /* C (= G+B) (白) */
   --drop-shadow-x: transparent;  /* 白のにじみ (赤) */
   /* LOGO-2 SVG FILL & STROKE COLOR */
-  --logo-fill-color-2: #000000;
+  --logo-fill-color-2: #ff5f56;
   --logo-stroke-color-2: transparent;
   --logo-width-2: 35%;
   --align-left: left;
@@ -52,19 +52,19 @@ YOU CAN CHANGE COLORS & WEIGHT HERE! */
   --drop-shadow-c-2: transparent;  /* C (= G+B) (白) */
   --drop-shadow-x-2: transparent;  /* 白のにじみ (赤) */
   /* LINK COLOR SETTINGS */
-  --link-color: #e39d6e;
-  --link-hover-color: #00ff08;
+  --link-color: #e8944a;
+  --link-hover-color: #ffd166;
   /* SOCIAL ICON SETTINGS */
   --social-font-size: 1.5rem;
-  --social-button-color: #000000;
-  --social-button-hover-color: #DE6A1C;
+  --social-button-color: #caa06c;
+  --social-button-hover-color: #ffb000;
   /* TEXT SELECTION COLOR */
-  --selection-text-color: #ffffff;
-  --selection-bg-color: #F24C3D;
+  --selection-text-color: #1a1210;
+  --selection-bg-color: #ff8c00;
   /* DOGGO (TOP *) COLOR */
-  --doggo-color: #ff58d0;
+  --doggo-color: #ff5f56;
   /* HR LINE COLOR */
-  --hr-line-color: #00583f;
+  --hr-line-color: #4a2e12;
 }
 
 
