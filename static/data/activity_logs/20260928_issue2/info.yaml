@@ -1,0 +1,7 @@
+mountain: テスト山（てすとやま）
+date: 2026-09-28
+area: テストエリア
+members:
+  - Koyama
+  - TestUser
+note: これは自動化ワークフローのテスト投稿です。動作確認後に削除します。
