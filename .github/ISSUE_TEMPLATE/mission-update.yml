@@ -1,6 +1,5 @@
 name: Missionバナー更新
 description: トップページの「Next Mission」バナーに新しいイベントを追加します（送信すると即座にサイトへ反映されます）
-title: "[Mission] "
 labels: ["mission-update"]
 body:
   - type: markdown
