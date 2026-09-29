@@ -1,6 +1,6 @@
 ---
 name: color-theme
-description: Propose and apply site-wide color theme changes for the 糞取山酷会 (sankoku) static site. Use whenever the user asks for color palette ideas ("配色アイデア出して", "配色案", "テーマ変えたい"), asks to switch the site's colors/theme, or says something is hard to see / too washed out on the site (e.g. a logo blending into the background) and wants a color fix. Covers the full color system in one pass — the shared static/css/theme-vars.css variables, the dot-art icon, the two logo SVGs, the activity log viewer (log.html), and the member bio pages — so nothing gets missed and no hardcoded color re-appears after a theme switch.
+description: Propose and apply site-wide color theme changes for the 糞取山酷会 (sankoku) static site. Use whenever the user asks for color palette ideas ("配色アイデア出して", "配色案", "テーマ変えたい"), asks to switch the site's colors/theme, or says something is hard to see / too washed out on the site (e.g. a logo blending into the background) and wants a color fix. Covers the full color system in one pass — the shared static/css/theme-vars.css variables, the dot-art icon, the two logo SVGs, the homepage ridge (3D wireframe mountain canvas), the activity log viewer (log.html), and the member bio pages — so nothing gets missed and no hardcoded color re-appears after a theme switch.
 ---
 
 # Color theme switching for sankoku
@@ -21,15 +21,15 @@ matters" below for how this file came to exist.
 
 | Variable | What it colors |
 |---|---|
-| `--main-bg-color` | page background |
-| `--main-font-color` | body text |
+| `--main-bg-color` | page background; also the ridge canvas's hidden-line fill (must match the page) |
+| `--main-font-color` | body text; also the ridge canvas's near-distance line color |
 | `--title-color` | the "Next Mission" top title link |
 | `--logo-fill-color` / `--logo-stroke-color` | the big outlined kanji logo (`#logo-slot`, `sankoku-logo-shake.svg`) |
 | `--logo-fill-color-2` / `--logo-stroke-color-2` | the smaller solid "糞取山酷会" kanji logo (`#logo-slot-2`, `sankoku-logo.svg`) |
 | `--link-color` / `--link-hover-color` | body links |
 | `--social-button-color` / `--social-button-hover-color` | social icons |
 | `--selection-text-color` / `--selection-bg-color` | text selection highlight |
-| `--doggo-color` | the "*" doggo accent mark near the top |
+| `--doggo-color` | the "*" doggo accent mark near the top; also the ridge canvas's far-distance line color and the sun |
 | `--accent-color` | same accent, used by name on the member bio pages |
 | `--hr-line-color` | horizontal rule lines |
 | `--muted-text-color` | secondary/de-emphasized text (e.g. countdown unit labels) |
@@ -50,6 +50,19 @@ Those are sizing, not color — leave them alone for a color-only theme change.
   `<link rel="stylesheet" href="../css/theme-vars.css" />`. There are
   currently two of these (`shigebayashi.html`, `ryu_wakimoto.html`); if a new
   bio page is added, it needs this same link, not a copy-pasted `:root`.
+- `static/js/ridge.js` — the homepage's 3D wireframe mountain (`<canvas
+  id="ridge">` in `layouts/default.html`, styled at the bottom of
+  `style.css`). Canvas can't resolve `var(--x)` either, so it reads the
+  resolved values once at load via `getComputedStyle`:
+  `--main-font-color` (near ridges) → `--doggo-color` (far ridges, blended
+  by distance; also the striped sun) and `--main-bg-color` (the fill that
+  hides lines behind nearer ridges). **These three must be plain hex
+  (`#rgb` / `#rrggbb`)** — the parser ignores `rgb()`/`hsl()`/named colors
+  and silently falls back to the old amber/red defaults, so a theme written
+  in another format would leave the ridge stuck on the old colors. It has no
+  hardcoded colors of its own (only those fallbacks); don't add any. It
+  reads colors only at page load, so a theme change needs a fresh page load
+  to show up (the running animation won't repick them).
 - `static/js/log-viewer.js` — draws Leaflet map markers/tracks and a Chart.js
   elevation graph. Neither Leaflet's SVG renderer nor Chart.js's canvas can
   resolve a CSS `var(--x)` reference the way a plain DOM element can, so this
@@ -129,7 +142,12 @@ each other, not five shades of the same idea.
 Show them before asking the user to pick — don't just describe hex codes in
 text. Use the `visualize` MCP's `show_widget` tool to render a mockup of the
 real layout for each candidate: the title, both logo colors, a body sentence,
-a link, an hr line, the social icon dots, and the dot-icon pattern. Reuse the
+a link, an hr line, the social icon dots, the dot-icon pattern, and a
+small ridge preview (a few wireframe mountain lines fading from
+`--main-font-color` in front to `--doggo-color` at the horizon, with a
+`--doggo-color` sun) — the ridge is the most colorful element on the page, so
+a palette that looks fine on text alone can still look wrong there (e.g. near
+and far colors too similar, or `--doggo-color` too dim against the bg). Reuse the
 actual dot pattern from `cc_cat_dot_style.css` (read the file to get the
 current 10x10 pattern) so the preview matches what's actually in the repo, not
 a placeholder. Screenshots from the built-in Browser pane are not a reliable
@@ -156,8 +174,11 @@ time — don't leave it for a future session to rediscover as a bug.
 
 Build and preview via the project's `sankoku-serve` launch config
 (`preview_start` with `name: "sankoku-serve"`), which runs `make serve-win`.
-Check at least the homepage, `log.html`, and one bio page under `static/bio/`
-— they're the three places that used to drift out of sync before
+Check at least the homepage (including the ridge canvas: near lines, far
+lines fading toward `--doggo-color`, and the sun should all show the new
+palette, and nothing should still be the old amber/red — load the page fresh,
+since the canvas reads colors only once), `log.html`, and one bio page under
+`static/bio/` — they're the three places that used to drift out of sync before
 `theme-vars.css` existed, so they're the highest-value spots to confirm.
 
 The built-in Browser pane in this project aggressively caches CSS across
