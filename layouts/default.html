@@ -275,7 +275,22 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
             </h2>
 
             <!-- RIDGE: 山稜ワイヤーフレーム（static/js/ridge.js）。自走のみ、入力には反応しない -->
+            <style>
+                /* RIDGE canvas。幅・高さは ridge.js がインラインで指定する（外部CSSのキャッシュずれ対策） */
+                #ridge {
+                    display: block;
+                    width: 100%;
+                    height: 200px; /* JS実行前の仮サイズ（実際は ridge.js が指定） */
+                    margin: 0.8rem 0 0.4rem;
+                    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 80%, transparent 100%);
+                    mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 80%, transparent 100%);
+                }
+                @media screen and (max-width: 768px) {
+                    #ridge { height: 150px; }
+                }
+            </style>
             <canvas id="ridge" aria-hidden="true"></canvas>
+            <noscript><style>#ridge { display: none; }</style></noscript>
 
             <!-- @CONTENTS -->
             {{{contents}}}
