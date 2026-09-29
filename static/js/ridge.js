@@ -15,7 +15,7 @@
 
   var ROWS = 30, MAX_D = ROWS + 0.5, X_SPAN = 12, PX_STEP = 3, FPS = 30;
   var MAXP = 2048, PX = new Float32Array(MAXP), PY = new Float32Array(MAXP);
-  var W = 0, H = 0, running = false, last = 0, t = 0, u = 0, near, far, bg;
+  var W = 0, H = 0, SC = 2, running = false, last = 0, t = 0, u = 0, near, far, bg;
 
   /* ---------- 色 ---------- */
   function parse(c, d) {
@@ -64,11 +64,20 @@
 
   /* ---------- 描画 ---------- */
   function resize() {
-    var r = canvas.getBoundingClientRect();
-    W = Math.max(1, Math.round(r.width));
-    H = Math.max(1, Math.round(r.height));
-    canvas.width = W * 2;                                 // 常に2倍: 1px線をにじませない
-    canvas.height = H * 2;
+    // サイズは canvas 自身ではなく「親の幅」から決め、canvas 側へインラインで指定する。
+    // canvas の実寸を読み返すと、CSS が効いていない時（キャッシュ違い等）に
+    // 既定300x150 → 描画バッファ2倍 → 表示も2倍 → …と拡大縮小のたびに倍々で崩れるため。
+    var w = Math.round(canvas.parentNode.getBoundingClientRect().width);
+    var h = window.matchMedia && matchMedia('(max-width: 768px)').matches ? 150 : 200; // CSSの高さと同じ境界
+    if (w < 1) return;                                    // 非表示中は何もしない
+    canvas.style.width = '100%';
+    canvas.style.height = h + 'px';
+    // 2倍以上で描く（1px線をにじませない）。ブラウザ拡大/高DPIでは上限3倍まで追従
+    var sc = Math.min(3, Math.max(2, Math.ceil(window.devicePixelRatio || 1)));
+    if (w === W && h === H && sc === SC) return;
+    W = w; H = h; SC = sc;
+    canvas.width = W * SC;
+    canvas.height = H * SC;
     draw();
   }
 
@@ -93,6 +102,7 @@
   }
 
   function draw() {
+    if (!W || !H) return;
     var hy = H * 0.34, f = W * 0.62, cx = W / 2;
     var base = Math.floor(t), frac = t - base;
     var i, j, x;
@@ -103,7 +113,7 @@
     var roll = -Math.cos((t + 1) * 0.23) * 0.32 * 0.08;
     var pulse = MAX_D * (1 - (u * 0.22) % 1);              // 手前へ流れてくる走査光の位置
 
-    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.setTransform(SC, 0, 0, SC, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.translate(cx, H * 0.6); ctx.rotate(roll); ctx.translate(-cx, -H * 0.6);
 
@@ -169,6 +179,8 @@
   readColors();
   t = 3.2;
   resize();
+  // ブラウザ拡大・回転・レイアウト変化でも実サイズに追従
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(canvas.parentNode);
   window.addEventListener('resize', resize);
 
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -177,7 +189,7 @@
   var visible = true, tabOn = !document.hidden;
   function sync() { (visible && tabOn) ? start() : stop(); }
   if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function (e) { visible = e[0].isIntersecting; sync(); }).observe(canvas);
+    new IntersectionObserver(function (e) { visible = e[e.length - 1].isIntersecting; sync(); }).observe(canvas); // 複数エントリなら最新を採用
   }
   document.addEventListener('visibilitychange', function () { tabOn = !document.hidden; sync(); });
   sync();

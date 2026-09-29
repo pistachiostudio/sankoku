@@ -394,19 +394,3 @@ a:hover {
     right: 5px;
   }
 }
-
-/* RIDGE — 山稜ワイヤーフレーム canvas（static/js/ridge.js） */
-#ridge {
-  display: block;
-  width: 100%;
-  height: 200px;
-  margin: 0.8rem 0 0.4rem;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 80%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 80%, transparent 100%);
-}
-
-@media screen and (max-width: 768px) {
-  #ridge {
-    height: 150px;
-  }
-}
