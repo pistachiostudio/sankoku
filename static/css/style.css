@@ -23,9 +23,6 @@ $$\   $$ |$$ |  $$ |$$ |\$$$ |$$ |\$$\  $$ |  $$ |$$ |\$$\  $$ |  $$ |
                                                                              
 */
 
-/* IMPORT FONT AWESOME CSS */
-@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css);
-
 /* IMPORT SHARED COLOR THEME (single source of truth — edit colors there,
    not here, so the log viewer and bio pages stay in sync). */
 @import url(theme-vars.css);

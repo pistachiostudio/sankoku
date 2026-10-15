@@ -9,8 +9,21 @@ on:
       - "README.md"
       - "archive/**"
 
+  # PR ではビルドだけ走らせて壊れていないか確認する（デプロイはしない）
+  pull_request:
+    branches: ["main"]
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+# ジョブごとに必要な権限だけを与える（既定は読み取りのみ）
+permissions:
+  contents: read
+
+# 連続 push で Pages デプロイが競合しないようにする
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
 
 # Default to bash
 defaults:
@@ -21,16 +34,20 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           submodules: recursive
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v1
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
       - name: Install vss cli
@@ -38,12 +55,14 @@ jobs:
       - name: Build with vss
         run: make build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: dist/
 
   # Deployment job
   deploy:
+    if: github.event_name != 'pull_request'
     permissions:
       pages: write
       id-token: write
@@ -55,5 +74,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
 
