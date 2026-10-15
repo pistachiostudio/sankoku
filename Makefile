@@ -2,7 +2,7 @@
 # 上げるときは VSS_VERSION と VSS_SHA256_LINUX_AMD64 を一緒に更新する
 VSS_VERSION ?= v0.18.0
 VSS_RELEASE_URL = https://github.com/veltiosoft/vss/releases/download/$(VSS_VERSION)
-VSS_SHA256_LINUX_AMD64 ?=
+VSS_SHA256_LINUX_AMD64 ?= d1065558a73e454d457aa080d4fa73f7560f4b94e2daaf3668df1acd719ad2d3
 
 clean:
 	rm -rf ./vss_* ./vss
