@@ -653,28 +653,33 @@
                 rankingListEl.style.display = 'block';
 
                 const scores = await fetchScores();
-                if (scores.length === 0) {
+                if (!Array.isArray(scores) || scores.length === 0) {
                     rankingContentEl.innerHTML = '<p style="text-align:center;">まだ記録がありません</p>';
                     return;
                 }
 
-                let html = '';
-                scores.forEach((s, i) => {
-                    const topClass = i < 3 ? 'top3' : '';
-                    html += `<div class="ranking-item ${topClass}">
-                <span class="rank">${i + 1}.</span>
-                <span class="name">${escapeHtml(s.name)}</span>
-                <span class="score">${s.score}m</span>
-                <span class="mountain">${s.mountain || '-'}</span>
-            </div>`;
-                });
-                rankingContentEl.innerHTML = html;
-            }
+                // 外部（Apps Script）から来る値は信用しない。innerHTML は使わず textContent で組み立てる
+                const fragment = document.createDocumentFragment();
+                scores.slice(0, 100).forEach((s, i) => {
+                    const item = document.createElement('div');
+                    item.className = i < 3 ? 'ranking-item top3' : 'ranking-item';
 
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
+                    const score = Math.floor(Number(s && s.score));
+                    const cells = [
+                        ['rank', `${i + 1}.`],
+                        ['name', String((s && s.name) ?? '').slice(0, 20)],
+                        ['score', Number.isFinite(score) ? `${score}m` : '-'],
+                        ['mountain', String((s && s.mountain) || '-').slice(0, 20)]
+                    ];
+                    cells.forEach(([cls, text]) => {
+                        const span = document.createElement('span');
+                        span.className = cls;
+                        span.textContent = text;
+                        item.appendChild(span);
+                    });
+                    fragment.appendChild(item);
+                });
+                rankingContentEl.replaceChildren(fragment);
             }
 
             function initGame() {
