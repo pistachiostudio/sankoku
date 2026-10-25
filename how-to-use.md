@@ -20,10 +20,8 @@
 # 1. Homebrew経由で必要なツールをインストール
 brew install make node
 
-# 2. VSSをダウンロード
-curl -OL https://github.com/vssio/go-vss/releases/latest/download/vss_darwin_arm64.tar.gz
-tar -xvf vss_darwin_arm64.tar.gz
-chmod +x vss
+# 2. VSSをダウンロード（Apple Silicon。Intel Mac は make setup-mac-intel）
+make setup-mac
 ```
 
 ### Linux
@@ -56,8 +54,12 @@ make setup-win
 | コマンド | 説明 | 対応OS |
 |----------|------|--------|
 | `make setup` | VSSをダウンロード | Linux |
+| `make setup-mac` | VSSをダウンロード | macOS（Apple Silicon） |
+| `make setup-mac-intel` | VSSをダウンロード | macOS（Intel） |
 | `make setup-win` | VSSをダウンロード | Windows |
 | `make clean` | VSSの関連ファイルを削除 | 全OS |
+
+VSS のバージョンは `Makefile` の `VSS_VERSION` で固定しています（CI も同じ版を使います）。上げるときは `VSS_VERSION` と `VSS_SHA256_LINUX_AMD64` を一緒に更新してください。
 
 ### ビルド
 
@@ -77,7 +79,7 @@ make setup-win
 
 ## VSS（静的サイトジェネレーター）の使い方
 
-VSS は Go言語で書かれた軽量な静的サイトジェネレーターです。友だちが作っているもので、当サイトの要望をフルに取り入れてもらいミニマムで作ってもらっています。
+VSS は Rust で書かれた軽量な静的サイトジェネレーターです（v0.16.0 で Go から移行）。友だちが作っているもので、当サイトの要望をフルに取り入れてもらいミニマムで作ってもらっています。
 
 [VSS: Easy-to-use static site generator](https://github.com/veltiosoft/vss)
 

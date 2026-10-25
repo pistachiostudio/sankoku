@@ -3,7 +3,8 @@ venv
 vss.exe
 vss
 dist
-vss_linux_amd64*
+vss_*.tar.gz
+vss_*.zip
 .vscode
 .DS_Store
 settings.local.json
