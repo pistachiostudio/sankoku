@@ -56,8 +56,9 @@ Windows / Linux・macOS でターゲット名が違う。OS に合わせて選�
 
 ### VSS の注意点
 
-- ルート直下だけでなく、**リポジトリ内のすべての `.md` がページ化されうる**（実際に `.claude/skills/**/SKILL.md` が HTML になった前例がある）。公開したくない `.md`（`README.md`、`AGENTS.md`、`how-to-use.md`、`INFO-message.md`、SKILL.md など）は `vss.toml` の `ignore_files` に列挙する。**新しい非公開 `.md` を足したら必ず追加する。**
-- **Windows の VSS はパス区切りが `\`**。サブディレクトリ内のファイルを除外するときは `/` 版と `\\` 版の**両方**を書く（Windows では `\\` 版、Linux の CI では `/` 版が効く）。現状 SKILL.md がこの形。
+- ルート直下だけでなく、**リポジトリ内のすべての `.md` がページ化されうる**。公開したくない `.md`（`README.md`、`AGENTS.md`、`how-to-use.md`、`INFO-message.md` など）は `vss.toml` の `ignore_files` に列挙する。**新しい非公開 `.md` を足したら必ず追加する。**
+- VSS v0.21.0 から `.` 始まりのディレクトリ（`.claude/`、`.github/` など）の `.md` は自動でページ化されなくなった。そのため `.claude/skills/**/SKILL.md` は `ignore_files` に書かなくてよい（以前は HTML になった前例がある）。また v0.21.0 以降はシンボリックリンクがビルド対象外なので、入力ファイルは通常のファイルとして置く。
+- **Windows の VSS はパス区切りが `\`**。サブディレクトリ内のファイルを除外するときは `/` 版と `\\` 版の**両方**を書く（Windows では `\\` 版、Linux の CI では `/` 版が効く）。
 - `make build` 後は `dist/` 内の `*.html` を確認する。あるべきものは `index.html` `log.html` `climb_game.html` `bio/*.html` だけ。`AGENTS.html` `README.html` `SKILL.html` があれば除外漏れ。
 - `static/sitemap.xml` は**手書き**（自動生成ではない）。ページを増やしたら手で追記する。
 
